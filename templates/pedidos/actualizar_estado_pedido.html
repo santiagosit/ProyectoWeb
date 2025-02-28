@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Actualizar Estado del Pedido{% endblock %}
+{% block content %}
+<h1>Actualizar Estado del Pedido</h1>
+<form method="post">
+    {% csrf_token %}
+    <label for="estado">Estado</label>
+    <select name="estado" id="estado">
+        <option value="pedido" {% if pedido.estado == 'pedido' %}selected{% endif %}>Pedido</option>
+        <option value="en_camino" {% if pedido.estado == 'en_camino' %}selected{% endif %}>En camino</option>
+        <option value="recibido" {% if pedido.estado == 'recibido' %}selected{% endif %}>Recibido</option>
+    </select>
+    <button type="submit">Actualizar</button>
+</form>
+<a href="{% url 'listar_pedidos' %}">Volver a la lista de pedidos</a>
+{% endblock %}

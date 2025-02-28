@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Venta{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <h1>Registrar Venta</h1>
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="form-venta">
+        {% csrf_token %}
+        {{ venta_form.as_p }}
+
+        <!-- Formulario para añadir productos -->
+        <h2>Añadir Producto</h2>
+        <div class="form-group">
+            <label for="producto">Producto:</label>
+            <select name="producto" id="producto" class="form-control">
+                {% for producto in productos %}
+                <option value="{{ producto.id }}" data-precio="{{ producto.precio }}">{{ producto.nombre }} - Stock: {{ producto.cantidad_stock }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" name="cantidad" min="1" value="1" class="form-control">
+        </div>
+        <button type="submit" name="agregar_producto" class="btn">Añadir Producto</button>
+    </form>
+
+    <!-- Mostrar productos añadidos -->
+    <h2>Productos añadidos</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>Acciones</th> <!-- Columna para eliminar -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in productos_venta %}
+            <tr>
+                <td>{{ detalle.producto_nombre }}</td>
+                <td>{{ detalle.cantidad }}</td>
+                <td>{{ detalle.precio_unitario }}</td>
+                <td>{{ detalle.subtotal }}</td>
+                <td>
+                    <form method="post" style="display:inline-block;">
+                        {% csrf_token %}
+                        <input type="hidden" name="eliminar_producto" value="{{ forloop.counter0 }}">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No hay productos añadidos aún.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<!-- Mostrar total -->
+<h3>Total: {{ total_venta }}</h3>
+
+
+    <form method="post" class="form-confirmar">
+        {% csrf_token %}
+        <button type="submit" name="confirmar_venta" class="btn">Confirmar Venta</button>
+    </form>
+
+    <!-- Botón para volver al home -->
+    <a href="{% url 'home' %}" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Inventario{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <h1>Reporte de Inventario</h1>
+
+    <div class="report-section">
+        <h2>Productos más vendidos</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Total Vendido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos_mas_vendidos %}
+                    <tr>
+                        <td>{{ producto.producto__nombre }}</td>
+                        <td>{{ producto.total_vendido }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h2>Productos sin stock</h2>
+        <ul>
+            {% for producto in productos_sin_stock %}
+            <li>{{ producto.nombre }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="report-section">
+        <h2>Productos que se agotan más rápido</h2>
+        <ul>
+            {% for producto in productos_agotandose %}
+            <li>{{ producto.nombre }} (Stock actual: {{ producto.cantidad_stock }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="report-section">
+        <h2>Productos que no se venden</h2>
+        <ul>
+            {% for producto in productos_no_vendidos %}
+            <li>{{ producto.nombre }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <a href="{% url 'exportar_reporte_excel' %}" class="btn">Descargar Reporte en Excel</a>
+</div>
+{% endblock %}

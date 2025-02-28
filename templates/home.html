@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="home-wrapper">
+    <!-- Encabezado de bienvenida -->
+    <header class="welcome-header">
+        <h1>Pola-Control</h1>
+        <p>Administra productos, proveedores, ventas y pedidos de manera eficiente y rápida.</p>
+        <p>.</p>
+        <a href="{% url 'listar_productos' %}" class="cta-btn">Productos</a>
+    </header>
+
+    <!-- Sección de accesos directos -->
+    <section class="main-sections">
+        <h2>Explora las Secciones</h2>
+        <div class="section-cards">
+            <div class="card">
+                <i class="fas fa-boxes icon"></i>
+                <h3>Productos</h3>
+                <p>Consulta y gestiona todos tus productos en inventario.</p>
+                <a href="{% url 'listar_productos' %}" class="card-link">Ver Productos</a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-handshake icon"></i>
+                <h3>Proveedores</h3>
+                <p>Accede a la lista completa de proveedores y su información.</p>
+                <a href="{% url 'listar_proveedores' %}" class="card-link">Ver Proveedores</a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-shopping-cart icon"></i>
+                <h3>Ventas</h3>
+                <p>Revisa y analiza las ventas recientes de tu negocio.</p>
+                <a href="{% url 'listar_ingresos' %}" class="card-link">Ver Ventas</a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-clipboard-list icon"></i>
+                <h3>Pedidos</h3>
+                <p>Consulta el estado de los pedidos y su información.</p>
+                <a href="{% url 'listar_pedidos' %}" class="card-link">Ver Pedidos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de estadísticas o resumen -->
+<section class="summary-section">
+    <h2>Resumen del Sistema</h2>
+    <div class="summary-cards">
+
+        <!-- Productos con bajo stock -->
+        <div class="summary-card">
+            <i class="fas fa-exclamation-circle icon-summary"></i>
+            <h4>Productos con Bajo Stock</h4>
+            <p>{{ productos_bajo_stock_count }} productos</p>
+        </div>
+
+        <!-- Pedidos Pendientes -->
+        <div class="summary-card">
+            <i class="fas fa-truck icon-summary"></i>
+            <h4>Pedidos Pendientes</h4>
+            <p>{{ pedidos_pendientes_count }} pedidos</p>
+        </div>
+
+        <!-- Productos sin stock -->
+        <div class="summary-card">
+            <i class="fas fa-times-circle icon-summary"></i>
+            <h4>Productos sin Stock</h4>
+            <p>{{ productos_sin_stock_count }} productos</p>
+        </div>
+    </div>
+</section>
+</div>
+
+<!-- CSS personalizado para un diseño más atractivo -->
+<style>
+    /* Home Wrapper */
+.home-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Encabezado de Bienvenida */
+.welcome-header {
+    background: linear-gradient(135deg, #2f81d6, #021125);
+    padding: 50px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    color: #fff;
+    transition: transform 0.3s;
+}
+.welcome-header:hover {
+    transform: scale(1.02); /* Efecto de agrandamiento */
+}
+.welcome-header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+
+}
+.welcome-header p {
+    font-size: 1.2rem;
+    color: #e0e0e0;
+}
+.cta-btn {
+    background: #ffc107;
+    color: #333;
+    padding: 12px 30px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: background 0.3s, transform 0.3s;
+    margin-top: 20px; /* Añade margen superior para separar el botón del texto */
+}
+
+.cta-btn:hover {
+    background: #e0a800;
+    transform: translateY(-3px);
+}
+
+/* Sección de Accesos Directos */
+.main-sections h2 {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 25px;
+}
+.section-cards {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 220px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+.icon {
+    font-size: 2.5rem;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+.card h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+.card p {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+.card-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+.card-link:hover {
+    color: #0056b3;
+}
+
+/* Sección de Resumen */
+.summary-section {
+    margin-top: 50px;
+    text-align: center;
+}
+.summary-section h2 {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 25px;
+}
+.summary-cards {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+.summary-card {
+    background: #e6f7ff;
+    padding: 25px;
+    border-radius: 10px;
+    width: 220px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+.summary-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+}
+.icon-summary {
+    font-size: 2.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+.summary-card h4 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 8px;
+}
+.summary-card p {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* Body y Wrapper */
+body {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 60px 20px;
+    color: #fff;
+}
+.wrapper {
+    width: 80%;
+    background: rgba(0, 0, 50, 0.85);
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Header */
+.header {
+    background-color: #004080;
+    padding: 15px 25px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+nav ul li a:hover {
+    background: #005bb5;
+}
+
+/* Botones Generales */
+.btn {
+    padding: 12px 20px;
+    background: #ffc107;
+    color: #333;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+.btn:hover {
+    background: #e0a800;
+}
+
+</style>
+{% endblock %}

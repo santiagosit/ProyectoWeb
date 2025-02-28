@@ -1,0 +1,14 @@
+<!-- templates/finanzas/crear_egreso_personalizado.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrapper">
+    <h2>Crear Egreso Personalizado</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar Egreso</button>
+    </form>
+    <a href="{% url 'listar_egresos' %}" class="btn btn-secondary" style="margin-top: 10px;">Volver a la Lista de Egresos</a>
+</div>
+{% endblock %}

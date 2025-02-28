@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrapper">
+    <h2 style="text-align: center; margin-bottom: 20px;">Lista de Ingresos</h2>
+    <div class="table-wrapper">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Venta</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ingreso in ingresos %}
+                <tr>
+                    <td>{{ ingreso.id }}</td>
+                    <td>{{ ingreso.venta }}</td>
+                    <td>{{ ingreso.monto }}</td>
+                    <td>{{ ingreso.fecha }}</td>
+                    <td>{{ ingreso.descripcion }}</td>
+                    <td><a class="btn" href="{% url 'detalle_ingreso' ingreso.id %}">Ver Detalle</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

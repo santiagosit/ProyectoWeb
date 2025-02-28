@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Productos{% endblock %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/estilosinv.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <h1>Lista de Productos</h1>
+    <a href="{% url 'registrar_producto' %}" class="btn">Registrar Nuevo Producto</a>
+
+    {% if messages %}
+        <div class="message">
+            <ul>
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="table-wrapper">
+        <table>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Cantidad en Stock</th>
+                <th>Stock Mínimo</th>
+                <th>Acciones</th>
+            </tr>
+            {% for producto in productos %}
+            <tr {% if producto.cantidad_stock < producto.stock_minimo %}class="low-stock"{% endif %}>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.descripcion }}</td>
+                <td>{{ producto.precio }}</td>
+                <td>{{ producto.cantidad_stock }}</td>
+                <td>{{ producto.stock_minimo }}</td>
+                <td>
+                    <a href="{% url 'modificar_producto' producto.id %}" class="btn">Modificar</a>
+                    <a href="{% url 'eliminar_producto' producto.id %}" class="btn">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

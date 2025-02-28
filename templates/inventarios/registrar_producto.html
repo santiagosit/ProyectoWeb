@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Producto{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="wrapper">
+    <h1>Registrar Nuevo Producto</h1>
+
+    {% if messages %}
+        <div class="message">
+            <ul>
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <div class="form-row">
+                <div class="form-column">
+                    <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+                    {{ form.nombre }}
+                </div>
+<div class="form-column">
+    <label for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+    {{ form.descripcion }}
+</div>
+
+            </div>
+            <div class="form-row">
+                <div class="form-column">
+                    <label for="{{ form.precio.id_for_label }}">{{ form.precio.label }}</label>
+                    {{ form.precio }}
+                </div>
+                <div class="form-column">
+                    <label for="{{ form.cantidad_stock.id_for_label }}">{{ form.cantidad_stock.label }}</label>
+                    {{ form.cantidad_stock }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-column">
+                    <label for="{{ form.stock_minimo.id_for_label }}">{{ form.stock_minimo.label }}</label>
+                    {{ form.stock_minimo }}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn">Guardar</button>
+    </form>
+
+    <a href="{% url 'listar_productos' %}" class="btn">Volver a la lista de productos</a>
+</div>
+{% endblock %}

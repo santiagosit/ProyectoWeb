@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Ingresos y Egresos{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <h1>Reporte de Ingresos y Egresos</h1>
+
+    <!-- Sección para selección de periodo -->
+    <form method="GET" class="form-periodo">
+        <label for="tipo_tiempo">Seleccionar periodo:</label>
+        <select name="tipo_tiempo" id="tipo_tiempo" onchange="this.form.submit()">
+            <option value="mensual" {% if tipo_tiempo == 'mensual' %}selected{% endif %}>Mensual</option>
+            <option value="semanal" {% if tipo_tiempo == 'semanal' %}selected{% endif %}>Semanal</option>
+        </select>
+    </form>
+
+    <!-- Filtro por intervalo de fechas -->
+
+
+    <!-- Tabla de ingresos y egresos generales -->
+    <div class="table-container">
+        <table class="table-resumen">
+            <thead>
+                <tr>
+                    <th>Ingresos</th>
+                    <th>Egresos</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${{ ingresos|floatformat:2 }}</td>
+                    <td>${{ egresos|floatformat:2 }}</td>
+                    <td>${{ balance|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráfico de barras más pequeño -->
+    <div class="chart-container" style="position: relative; height:30vh; width:50vw; margin-top: 20px;">
+        <canvas id="chartIngresosEgresos"></canvas>
+    </div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('chartIngresosEgresos').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Ingresos', 'Egresos', 'Balance'],
+            datasets: [{
+                label: 'Ingresos y Egresos',
+                data: [{{ ingresos }}, {{ egresos }}, {{ balance }}],
+                backgroundColor: ['#28a745', '#dc3545', '#007bff']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+        }
+    });
+</script>
+
+<style>
+    .scroll-container {
+        max-height: 300px;
+        overflow-y: scroll;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Registrar Pedido{% endblock %}
+{% block content %}
+<div class="wrapper">
+    <h1>Registrar Pedido</h1>
+    <form id="pedidoForm" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ pedido_form.as_p }}
+        </div>
+
+        <!-- Selección de productos -->
+        <!-- Selección de productos -->
+<div class="form-group">
+    <label for="producto">Producto:</label>
+    <select id="producto" name="producto" class="form-control">
+        {% for producto in productos %}
+            <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="cantidad">Cantidad:</label>
+    <input type="number" id="cantidad" name="cantidad" min="1" class="form-control">
+</div>
+
+<!-- Nuevo campo para el costo unitario -->
+<div class="form-group">
+    <label for="costo_unitario">Costo Unitario:</label>
+    <input type="number" id="costo_unitario" name="costo_unitario" min="0.01" step="0.01" class="form-control">
+</div>
+
+<button type="button" id="addProductBtn" class="btn">Añadir Producto</button>
+
+
+        <!-- Tabla de productos añadidos -->
+        <table id="productosTable" class="table">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Costo Unitario</th>
+            <th>Subtotal</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Aquí se añadirán los productos -->
+    </tbody>
+</table>
+
+        <!-- Observaciones -->
+        <div class="form-group">
+            <label for="observaciones">Observaciones:</label>
+            <textarea id="observaciones" name="observaciones" class="form-control"></textarea>
+        </div>
+
+        <button type="submit" class="btn">Registrar Pedido</button>
+    </form>
+
+   <script>
+    document.getElementById('addProductBtn').addEventListener('click', function() {
+        var productoSelect = document.getElementById('producto');
+        var productoId = productoSelect.value;
+        var productoNombre = productoSelect.options[productoSelect.selectedIndex].text;
+        var cantidad = document.getElementById('cantidad').value;
+        var costoUnitario = document.getElementById('costo_unitario').value;
+        var subtotal = cantidad * costoUnitario;
+
+        if (cantidad > 0 && costoUnitario > 0) {
+            var table = document.getElementById('productosTable').getElementsByTagName('tbody')[0];
+            var newRow = table.insertRow();
+
+            newRow.innerHTML = `<td>${productoNombre}<input type="hidden" name="productos[]" value="${productoId}"></td>
+                                <td>${cantidad}<input type="hidden" name="cantidades[]" value="${cantidad}"></td>
+                                <td>${costoUnitario}<input type="hidden" name="costos_unitarios[]" value="${costoUnitario}"></td>
+                                <td>${subtotal.toFixed(2)}</td>
+                                <td><button type="button" onclick="deleteRow(this)">Eliminar</button></td>`;
+        }
+    });
+
+    function deleteRow(btn) {
+        var row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+</script>
+
+    <a href="{% url 'listar_pedidos' %}" class="btn">Volver a la lista de pedidos</a>
+</div>
+{% endblock %}

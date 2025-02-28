@@ -1,0 +1,349 @@
+/* CSS global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: url('/static/images/fondo_azul.jpg') no-repeat;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 40px 20px; /* Aumentar el padding superior para separar el body del header */
+}
+
+.wrapper {
+  width: 80%;
+  background: rgba(0, 0, 50, 0.85);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Estilos del header */
+.header {
+  background-color: #004080;
+  padding: 10px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  margin-top: 20px; /* Añadir margen superior al header */
+}
+.header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 20px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+nav ul li a:hover {
+  background: #005bb5;
+}
+
+/* Estilos para formularios */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Cambiado para que los inputs ocupen el ancho completo */
+  margin-top: 10px; /* Espaciado entre el formulario y otros elementos */
+}
+
+form label {
+  margin-bottom: 5px; /* Espaciado debajo de las etiquetas */
+  font-weight: bold;
+}
+
+form input,
+form select,
+form button {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 15px; /* Espaciado entre inputs */
+  transition: border-color 0.3s, box-shadow 0.3s; /* Añadido para animaciones */
+}
+
+form input:focus,
+form select:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 5px rgba(0, 102, 204, 0.5); /* Efecto de enfoque */
+}
+
+form button {
+  background: #0066cc;
+  color: #fff;
+  cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+  transition: background 0.3s ease;
+}
+
+form button:hover {
+  background: #005bb5;
+}
+
+/* Estilos para menús desplegables */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #003366;
+  margin-top: 0; /* Ajustado para eliminar margen superior */
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  border-radius: 5px; /* Para esquinas redondeadas */
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 12px 18px;
+  text-decoration: none;
+  display: block;
+  transition: background 0.3s, color 0.3s; /* Transición para color del texto */
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: black; /* Cambiar color del texto a negro al hacer hover */
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Estilos para notificaciones */
+.notification {
+  position: relative;
+  display: inline-block;
+}
+
+.notification .notification-number {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  z-index: 2;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  background-color: white;
+  color: black;
+  min-width: 300px; /* Ancho mínimo ajustado */
+  border: 1px solid #ddd;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: none;
+  z-index: 1;
+  border-radius: 5px; /* Esquinas redondeadas */
+}
+
+.notification-dropdown ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-dropdown li {
+  padding: 15px; /* Tamaño ajustado */
+  display: flex; /* Usar flexbox para alineación horizontal */
+  justify-content: space-between; /* Espacio entre elementos */
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.notification-dropdown li:nth-child(odd) {
+  background-color: #f9f9f9; /* Color alterno para filas impares */
+}
+
+.notification-dropdown li:nth-child(even) {
+  background-color: #f1f1f1; /* Color alterno para filas pares */
+}
+
+.notification-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.notification:hover .notification-dropdown {
+  display: block;
+}
+
+/* Resto de los estilos */
+.header .logo h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 24px;
+  color: white;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+th,
+td {
+  padding: 15px;
+  text-align: left;
+}
+
+th {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 15px;
+  background: #0066cc;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  text-align: center;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+}
+
+.btn:hover {
+  background: #005bb5;
+}
+
+.message {
+  margin-bottom: 20px;
+}
+
+/* Menú de perfil */
+.profile-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-menu img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  color: black;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.profile-dropdown li {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.profile-dropdown li a {
+  color: black;
+  text-decoration: none;
+}
+
+.profile-dropdown li a:hover {
+  background-color: #f1f1f1;
+}
+
+.profile-menu:hover .profile-dropdown {
+  display: block;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between; /* Espacio uniforme entre columnas */
+    margin-bottom: 15px; /* Espaciado entre filas */
+}
+
+.form-column {
+    flex: 1; /* Cada columna ocupa el mismo ancho */
+    margin-right: 15px; /* Espaciado entre columnas */
+}
+
+.form-column:last-child {
+    margin-right: 0; /* Elimina el margen derecho en la última columna */
+}
+
+label {
+    display: block; /* Cada etiqueta ocupa toda la fila */
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input:focus,
+select:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 5px rgba(0, 102, 204, 0.5);
+}
+textarea {
+    width: 100%; /* Mantiene el ancho completo de la columna */
+    height: 100px; /* Altura ajustada para que no sea invasivo */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+textarea:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 5px rgba(0, 102, 204, 0.5);
+}
+

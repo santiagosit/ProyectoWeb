@@ -1,0 +1,68 @@
+<!-- templates/finanzas/listar_egresos.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrapper">
+    <h2>Lista de Egresos</h2>
+
+    <!-- Tabla de egresos asociados a pedidos -->
+<h3>Egresos Asociados a Pedidos</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Pedido</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Acciones</th> <!-- Nueva columna para botones -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for egreso in egresos_pedidos %}
+        <tr>
+            <td>{{ egreso.id }}</td>
+            <td>{{ egreso.pedido }}</td>
+            <td>{{ egreso.monto }}</td>
+            <td>{{ egreso.fecha }}</td>
+            <td>{{ egreso.descripcion }}</td>
+            <td>
+                <a href="{% url 'detalle_egreso' egreso.id %}" class="btn btn-info btn-sm">Ver Detalles</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Tabla de egresos personalizados -->
+<h3>Egresos Personalizados</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Categoría</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Acciones</th> <!-- Nueva columna para botones -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for egreso in egresos_personalizados %}
+        <tr>
+            <td>{{ egreso.id }}</td>
+            <td>{{ egreso.categoria }}</td>
+            <td>{{ egreso.monto }}</td>
+            <td>{{ egreso.fecha }}</td>
+            <td>{{ egreso.descripcion }}</td>
+            <td>
+                <a href="{% url 'detalle_egreso' egreso.id %}" class="btn btn-info btn-sm">Ver Detalles</a>
+                <a href="{% url 'eliminar_egreso_personalizado' egreso.id %}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este egreso?')">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+{% endblock %}

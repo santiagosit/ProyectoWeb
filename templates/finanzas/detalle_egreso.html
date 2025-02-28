@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrapper">
+    <h2 style="text-align: center; margin-bottom: 20px;">Detalle del Egreso</h2>
+
+{% if detalles %}
+    <h3>Detalles del Pedido</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Costo Unitario</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+            <tr>
+                <td>{{ detalle.producto }}</td>
+                <td>{{ detalle.cantidad }}</td>
+                <td>{{ detalle.costo_unitario }}</td>
+                <td>{{ detalle.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Este egreso es personalizado y no tiene detalles asociados.</p>
+{% endif %}
+
+<!-- Mostramos el total del egreso -->
+<h4>Total: {{ total }}</h4>
+
+    <a class="btn" href="{% url 'listar_egresos' %}" style="display: inline-block; margin-top: 20px;">Volver a la lista</a>
+</div>
+{% endblock %}

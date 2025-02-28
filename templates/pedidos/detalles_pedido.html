@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Detalles del Pedido{% endblock %}
+{% block content %}
+<div class="wrapper">
+    <h1>Detalles del Pedido {{ pedido.id }}</h1>
+
+    <div class="pedido-info">
+        <p><strong>Proveedor:</strong> {{ pedido.proveedor.nombre }}</p>
+        <p><strong>Fecha del Pedido:</strong> {{ pedido.fecha_pedido }}</p>
+        <p><strong>Estado:</strong> {{ pedido.estado }}</p>
+    </div>
+
+    <h2>Productos</h2>
+    <ul class="productos-list">
+        {% for detalle in pedido.detalles.all %}
+            <li>{{ detalle.producto.nombre }}: {{ detalle.cantidad }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'listar_pedidos' %}" class="btn">Volver a la lista de pedidos</a>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="wrapper">
+  <h2>Registrar Proveedor</h2>
+  {% if messages %}
+    <div class="message">
+      <ul>
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+      <div class="form-column">
+        <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+        {{ form.nombre }}
+      </div>
+      <div class="form-column">
+        <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+        {{ form.direccion }}
+      </div>
+      <div class="form-column">
+        <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+        {{ form.telefono }}
+      </div>
+      <div class="form-column">
+        <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+        {{ form.email }}
+      </div>
+    </div>
+    <button type="submit" class="btn">Guardar</button>
+  </form>
+  <a href="{% url 'listar_proveedores' %}" class="btn">Volver a la lista de proveedores</a>
+</div>
+{% endblock %}
