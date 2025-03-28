@@ -157,31 +157,36 @@
             <h1>Pola-Control</h1>
             <nav>
                 <ul>
+                    
                     <li class="dropdown">
                         <a href="{% url 'home' %}">Inicio</a>
                     </li>
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
                     <li class="dropdown">
                         <a href="#">Productos</a>
                         <ul class="dropdown-content">
                             <li><a href="{% url 'listar_productos' %}">Listar Productos</a></li>
                             <li><a href="{% url 'registrar_producto' %}">Registrar Producto</a></li>
-                            
                         </ul>
                     </li>
+                    {% endif %}
                     <li class="dropdown">
                         <a href="#">Ventas</a>
                         <ul class="dropdown-content">
                             <li><a href="{% url 'registrar_venta' %}">Registrar Venta</a></li>
                         </ul>
                     </li>
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
                     <li class="dropdown">
                         <a href="#">Reportes</a>
                         <ul class="dropdown-content">
                             <li><a href="{% url 'reporte_inventario' %}">Reporte de Inventario</a></li>
                             <li><a href="{% url 'exportar_reporte_excel' %}">Descargar Reporte en Excel</a></li>
-                            <li><a href="{% url 'reporte_ingresos_egresos' %}">Estadisticas</a></li>
+                            <li><a href="{% url 'reporte_ingresos_egresos' %}">Estadísticas</a></li>
                         </ul>
                     </li>
+                    {% endif %}
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
                     <li class="dropdown">
                         <a href="#">Pedidos</a>
                         <ul class="dropdown-content">
@@ -191,38 +196,61 @@
                             <li><a href="{% url 'registrar_pedido' %}">Registrar Pedido</a></li>
                         </ul>
                     </li>
-                                    <li class="dropdown">
+                    {% endif %}
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
+                    <li class="dropdown">
                         <a href="#">Finanzas</a>
                         <ul class="dropdown-content">
                             <li><a href="{% url 'listar_ingresos' %}">Ingresos</a></li>
                             <li><a href="{% url 'listar_egresos' %}">Egresos</a></li>
                             <li><a href="{% url 'crear_egreso_personalizado' %}">Crear Egreso</a></li>
-
                         </ul>
                     </li>
-                    <li class="notification">
-                      <a href="#">
-                        <img src="{% static 'images/bell.png' %}" alt="Notificaciones" width="24">
-                        {% if num_notificaciones > 0 %}
-                          <span class="notification-number">{{ num_notificaciones }}</span>
-                        {% endif %}
-                      </a>
-                      <div class="notification-dropdown">
-                        <ul>
-                            <span style="color: red">Productos bajos en Stock</span>
-                          {% for producto in productos_bajo_stock %}
-                            <li>
-                              <span>{{ producto.nombre }}: {{ producto.cantidad_stock }} en stock</span>
-                            </li>
-                          {% endfor %}
+                    {% endif %}
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
+                    <li class="dropdown">
+                        <a href="#">Usuarios</a>
+                        <ul class="dropdown-content">
+                            {% if  request.user.is_superuser %}
+                            <li><a href="{% url 'crear_administrador' %}">Registrar Administrador</a></li>
+                            <li><a href="{% url 'listar_administradores' %}">Listar Administradores</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'crear_empleado' %}">Registrar Empleado</a></li>
+                            <li><a href="{% url 'listar_empleados' %}">Listar Empleados</a></li>
                         </ul>
-                      </div>
+                    </li>
+                    {% endif %}
+                    {% if profile.rol == 'Administrador' or request.user.is_superuser %}
+                    <li class="dropdown">
+                        <a href="#">Eventos</a>
+                        <ul class="dropdown-content">
+                            <li><a href="{% url 'listar_eventos' %}">Listar Eventos</a></li>
+                            <li><a href="{% url 'crear_evento' %}">Crear Evento</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    <li class="notification">
+                        <a href="#">
+                            <img src="{% static 'images/bell.png' %}" alt="Notificaciones" width="24">
+                            {% if num_notificaciones > 0 %}
+                                <span class="notification-number">{{ num_notificaciones }}</span>
+                            {% endif %}
+                        </a>
+                        <div class="notification-dropdown">
+                            <ul>
+                                <span style="color: red">Productos bajos en Stock</span>
+                                {% for producto in productos_bajo_stock %}
+                                    <li>
+                                        <span>{{ producto.nombre }}: {{ producto.cantidad_stock }} en stock</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </li>
                     <li class="dropdown profile-menu">
                         <a href="#"><img src="{% static 'images/perfil.png' %}" alt="Perfil" width="24"></a>
                         <ul class="profile-dropdown">
                             <li>{{ request.user.username }}</li>
-                            
                             <li><a href="{% url 'logout' %}">Cerrar sesión</a></li>
                         </ul>
                     </li>

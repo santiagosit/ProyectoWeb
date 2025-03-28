@@ -28,9 +28,6 @@
                 <a href="{% url 'recuperar_password' %}">Forgot Password</a>
             </div>
             <button type="submit" class="btn">Login</button>
-            <div class="register-link">
-                <p>Don't have an account? <a href="/registrar">Register</a></p>
-            </div>
             {% if error %}
                 <p style="color:red;">{{ error }}</p>
             {% endif %}

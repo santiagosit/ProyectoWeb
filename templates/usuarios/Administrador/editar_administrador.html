@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Administrador{% endblock %}
+
+{% block content %}
+<div class="form-group">
+    <h2>Editar Administrador</h2>
+    <form method="post" class="form-group">
+        {% csrf_token %}
+        {{ user_form.as_p }}
+        {{ profile_form.as_p }}
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

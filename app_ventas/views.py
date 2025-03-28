@@ -1,17 +1,19 @@
-
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
 from app_inventario.models import Producto
 from .models import Venta, VentaDetalle
 from .forms import VentaForm
 
+@login_required
+@user_passes_test(is_employee_or_above)
 def registrar_venta(request):
     productos = Producto.objects.all()
 
     # Inicializa una lista en la sesión para almacenar los productos temporalmente
     if 'productos_venta' not in request.session:
         request.session['productos_venta'] = []
-
 
     if request.method == 'POST':
         if 'agregar_producto' in request.POST:
@@ -97,5 +99,3 @@ def registrar_venta(request):
         'total_venta': total_venta,  # Pasamos el total al contexto
         'venta_form': VentaForm(),
     })
-
-

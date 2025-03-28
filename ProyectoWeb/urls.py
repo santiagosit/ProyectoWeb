@@ -16,16 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.contrib import admin
-from django.urls import path, include
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('app_usuarios.urls')),
+    path('', include('app_usuarios.urls')),  # Mantener esta como ruta base
     path('productos/', include('app_inventario.urls')),
     path('finanzas/', include('app_finanzas.urls')),
     path('pedidos/', include('app_pedidos.urls')),
     path('ventas/', include('app_ventas.urls')),
     path('reportes/', include('app_reportes.urls')),
+    path('eventos/', include('app_eventos.urls')),  # Cambiar a una ruta específica
     #path('pagos/', include('app_pagos.urls')),
 ]
 

@@ -1,9 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Producto
 from .forms import ProductoForm
 
 
+def is_employee_or_above(user):
+    return user.is_authenticated and (user.is_employee or user.is_admin or user.is_superuser)
+
+
+def is_admin_or_superuser(user):
+    return user.is_authenticated and (user.is_admin or user.is_superuser)
+
+
+@login_required
+@user_passes_test(is_employee_or_above)
 def listar_productos(request):
     productos = Producto.objects.all()
     productos_bajo_stock = [producto for producto in productos if producto.stock_bajo()]
@@ -14,6 +25,8 @@ def listar_productos(request):
     })
 
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def registrar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
@@ -37,6 +50,8 @@ def registrar_producto(request):
     })
 
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def eliminar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
@@ -52,6 +67,8 @@ def eliminar_producto(request, producto_id):
     })
 
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def modificar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
@@ -79,6 +96,8 @@ def home(request):
         'productos_bajo_stock': productos_bajo_stock,
         'num_notificaciones': len(productos_bajo_stock)
     })
+
+
 def notificaciones(request):
     productos_bajo_stock = [producto for producto in Producto.objects.all() if producto.stock_bajo()]
     num_notificaciones = len(productos_bajo_stock)

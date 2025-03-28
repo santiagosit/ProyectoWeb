@@ -1,12 +1,10 @@
-
-
-
-
+from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 from .models import  PedidoDetalle
 from .forms import PedidoForm
+from django.contrib.auth.decorators import login_required, user_passes_test
 
-
-
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def registrar_pedido(request):
     if request.method == 'POST':
         pedido_form = PedidoForm(request.POST)
@@ -47,7 +45,8 @@ def registrar_pedido(request):
     }
     return render(request, 'pedidos/registrar_pedido.html', context)
 
-
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def actualizar_estado_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
     if request.method == 'POST':
@@ -61,7 +60,8 @@ def actualizar_estado_pedido(request, pedido_id):
         return redirect('listar_pedidos')
     return render(request, 'pedidos/actualizar_estado_pedido.html', {'pedido': pedido})
 
-
+@login_required
+@user_passes_test(is_employee_or_above)
 def listar_pedidos(request):
     query_id = request.GET.get('id')
     query_proveedor = request.GET.get('proveedor')
@@ -90,6 +90,8 @@ def listar_pedidos(request):
 from django.shortcuts import render, redirect
 from .forms import ProveedorForm
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def registrar_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)

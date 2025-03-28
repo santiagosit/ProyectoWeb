@@ -38,8 +38,9 @@ SECRET_KEY = 'django-insecure--^!j0zutxz=)2th+qql@8&4%ko%)8p9ddcc^zia(u0-me$b%_1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['djangoelectronics.store','127.0.0.1','localhost']
 
+CRSF_TRUSTED_ORIGINS = ['https://djangoelectronics.store/', 'https://127.0.0.1:8000', 'localhost']
 
 # Application definition
 
@@ -58,13 +59,15 @@ INSTALLED_APPS = [
     'app_inventario',
     'app_finanzas',
     'app_ventas',
+    'app_administracion',
+    'app_eventos',
 'django_ses',
 
 
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -87,6 +90,7 @@ TEMPLATES = [
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
             'app_inventario.views.notificaciones',
+            'app_usuarios.context_processors.add_profile_to_context',
         ]),
     },
 ]
@@ -159,4 +163,18 @@ AWS_ACCESS_KEY_ID = 'AKIASVLKB7LXKBF4W5X6'
 AWS_SECRET_ACCESS_KEY = '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'
 AWS_SES_REGION_NAME = 'us-east-1'  # Ajusta según tu región
 AWS_SES_REGION_ENDPOINT = 'email.us-east-1.amazonaws.com'  # Ajusta
+
+# Configuración de Login y Permisos
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
+
+# Lista de URLs que no requieren autenticación
+LOGIN_EXEMPT_URLS = [
+    r'^$',
+    r'^login/$',
+    r'^recuperar/$',
+    r'^verificar_pin/$',
+    r'^reset_password/.*$',
+]
 

@@ -1,11 +1,13 @@
 # Reporte de productos más vendidos
 import openpyxl
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from openpyxl.utils import get_column_letter
 
 
 from app_inventario.models import Producto
+from app_usuarios.utils import is_admin_or_superuser
 from app_ventas.models import VentaDetalle
 from django.db.models import  F
 
@@ -39,6 +41,9 @@ def productos_no_vendidos():
         id__in=VentaDetalle.objects.filter(venta__fecha__gte=hace_30_dias).values('producto')
     )
     return productos_no_vendidos
+
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def reporte_inventario(request):
     # Productos más vendidos (sumamos la cantidad vendida por producto)
     productos_mas_vendidos = VentaDetalle.objects.values('producto__nombre').annotate(total_vendido=Sum('cantidad')).order_by('-total_vendido')[:10]
@@ -82,6 +87,8 @@ def estilizar_encabezado(celda):
                           bottom=Side(style='thin'))
 
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def exportar_reporte_excel(request):
     hoy = datetime.date.today()
 
@@ -206,6 +213,8 @@ from django.utils import timezone
 from app_finanzas.models import Egreso
 from app_ventas.models import Venta
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def reporte_ingresos_egresos(request):
     hoy = timezone.now().date()  # Usamos timezone.now() en lugar de datetime.date.today()
     tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
@@ -264,3 +273,4 @@ def home(request):
     }
 
     return render(request, 'home.html', context)
+
