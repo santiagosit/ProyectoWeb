@@ -2,16 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 
-from app_usuarios.utils import is_admin_or_superuser
+from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
 from .models import Evento, Cliente
 
-def is_admin(user):
-    if user.is_superuser:
-        return True
-    try:
-        return user.profile.rol == 'Administrador'
-    except:
-        return False
+
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
@@ -57,7 +51,7 @@ def editar_evento(request, evento_id):
     return render(request, 'eventos/editar_evento.html', {'evento': evento})
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(is_admin_or_superuser)
 def confirmar_edicion_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     

@@ -1,30 +1,213 @@
-/* CSS global */
+/* Variables globales */
+:root {
+    --primary-color: #0066cc;
+    --primary-hover: #005bb5;
+    --secondary-color: #003366;
+    --background-color: #f4f4f4;
+    --text-color: #fff;
+    --border-color: #ccc;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --success-color: #28a745;
+    --success-hover: #218838;
+}
+
+/* Reset y estilos base */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", Arial, sans-serif;
 }
 
 body {
-  background: url('/static/images/fondo_azul.jpg') no-repeat;
-  background-size: cover;
-  background-position: center;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 40px 20px; /* Aumentar el padding superior para separar el body del header */
+    background: url('/static/images/fondo_azul.jpg') no-repeat center/cover;
+    color: var(--text-color);
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+/* Layout principal */
 .wrapper {
-  width: 80%;
-  background: rgba(0, 0, 50, 0.85);
-  border-radius: 10px;
-  padding: 20px;
-  margin-top: 20px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    max-width: 1200px;
+    width: 80%;
+    background: rgba(0, 0, 50, 0.85);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px auto;
+    box-shadow: 0 0 20px var(--shadow-color);
+}
+
+header.wrapper {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+main.wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 150px);
+}
+
+footer.wrapper {
+    margin-top: 5px;
+    padding: 30px 0;
+}
+
+/* Navegación y header */
+.header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav ul li {
+    margin-left: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+nav ul li a:hover {
+    background: var(--primary-hover);
+}
+
+/* Estilos para formularios */
+.form-container {
+    background-color: white;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    width: 300px;
+    margin: 0 auto;
+}
+
+.form-container label,
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-container input,
+.form-container select,
+.form-container button,
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.form-container button,
+.btn {
+    background-color: var(--success-color);
+    color: var(--text-color);
+    border: none;
+    cursor: pointer;
+}
+
+.form-container button:hover,
+.btn:hover {
+    background-color: var(--success-hover);
+}
+
+/* Dropdowns */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--secondary-color);
+    min-width: 160px;
+    margin-top: 7px;
+    box-shadow: 0 8px 16px var(--shadow-color);
+    z-index: 1;
+    border-radius: 5px;
+}
+
+.dropdown:hover .dropdown-content,
+.notification:hover .notification-dropdown,
+.profile-menu:hover .profile-dropdown {
+    display: block;
+}
+
+/* Notificaciones */
+.notification {
+    position: relative;
+}
+
+.notification-number {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: var(--text-color);
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.notification-dropdown,
+.profile-dropdown {
+    position: absolute;
+    right: 0;
+    background-color: white;
+    color: black;
+    min-width: 160px;
+    box-shadow: 0 8px 16px var(--shadow-color);
+    display: none;
+    z-index: 1;
+    border-radius: 5px;
+}
+
+/* Tablas */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+}
+
+th {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Estilos del header */
@@ -34,12 +217,6 @@ body {
   border-radius: 10px;
   margin-bottom: 20px;
   margin-top: 20px; /* Añadir margen superior al header */
-}
-.header-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
 }
 
 nav ul {

@@ -1,96 +1,127 @@
-# Reporte de productos más vendidos
-import openpyxl
+# Django imports
+from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Sum, F, Q
+from django.utils import timezone
 
+# Third-party imports
+import openpyxl
 from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.chart import BarChart, Reference
 
-
-from app_inventario.models import Producto
+# Local imports
 from app_usuarios.utils import is_admin_or_superuser
-from app_ventas.models import VentaDetalle
-from django.db.models import  F
+from app_inventario.models import Producto
+from app_ventas.models import Venta, VentaDetalle
+from app_finanzas.models import Ingreso, Egreso
+from app_pedidos.models import Pedido
 
+# Helper functions
+def estilizar_encabezado(celda):
+    """Aplica estilos al encabezado de Excel."""
+    celda.font = Font(bold=True, color="FFFFFF")
+    celda.fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    celda.alignment = Alignment(horizontal="center", vertical="center")
+    celda.border = Border(
+        left=Side(style='thin'), 
+        right=Side(style='thin'), 
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
 
 def productos_mas_vendidos(tipo_tiempo='mensual'):
-    hoy = datetime.date.today()
-    if tipo_tiempo == 'semanal':
-        inicio_periodo = hoy - datetime.timedelta(days=7)
-    else:  # mensual
-        inicio_periodo = hoy.replace(day=1)
+    """Retorna los productos más vendidos en un periodo."""
+    hoy = timezone.now().date()
+    inicio_periodo = (
+        hoy - timezone.timedelta(days=7)
+        if tipo_tiempo == 'semanal'
+        else hoy.replace(day=1)
+    )
 
-    # Productos más vendidos (ajustado al modelo)
-    productos_vendidos = VentaDetalle.objects.filter(
+    return VentaDetalle.objects.filter(
         venta__fecha__range=[inicio_periodo, hoy]
     ).values('producto__nombre').annotate(
         total_vendido=Sum('cantidad')
     ).order_by('-total_vendido')
 
-    return productos_vendidos
-
-# Productos sin stock
 def productos_sin_stock():
+    """Retorna productos sin stock."""
     return Producto.objects.filter(cantidad_stock=0)
 
-# Productos que no se venden (últimos 30 días sin ventas)
 def productos_no_vendidos():
-    hoy = datetime.date.today()
-    hace_30_dias = hoy - datetime.timedelta(days=30)
-
-    productos_no_vendidos = Producto.objects.exclude(
-        id__in=VentaDetalle.objects.filter(venta__fecha__gte=hace_30_dias).values('producto')
+    """Retorna productos sin ventas en los últimos 30 días."""
+    hace_30_dias = timezone.now().date() - timezone.timedelta(days=30)
+    return Producto.objects.exclude(
+        id__in=VentaDetalle.objects.filter(
+            venta__fecha__gte=hace_30_dias
+        ).values('producto')
     )
-    return productos_no_vendidos
 
+# View functions
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def reporte_inventario(request):
-    # Productos más vendidos (sumamos la cantidad vendida por producto)
-    productos_mas_vendidos = VentaDetalle.objects.values('producto__nombre').annotate(total_vendido=Sum('cantidad')).order_by('-total_vendido')[:10]
-
-    # Productos sin stock
-    productos_sin_stock = Producto.objects.filter(cantidad_stock=0)
-
-    # Productos que se agotan más rápido (podemos suponer que los que tienen bajo stock pero son muy vendidos)
-    productos_agotandose = Producto.objects.filter(cantidad_stock__lt=F('stock_minimo')).order_by('cantidad_stock')
-
-    # Productos que no se venden (aquellos que no tienen ventas asociadas)
-    productos_no_vendidos = Producto.objects.exclude(ventadetalle__isnull=False)
-
     context = {
-        'productos_mas_vendidos': productos_mas_vendidos,
-        'productos_sin_stock': productos_sin_stock,
-        'productos_agotandose': productos_agotandose,
-        'productos_no_vendidos': productos_no_vendidos,
+        'productos_mas_vendidos': VentaDetalle.objects.values(
+            'producto__nombre'
+        ).annotate(
+            total_vendido=Sum('cantidad')
+        ).order_by('-total_vendido')[:10],
+        'productos_sin_stock': productos_sin_stock(),
+        'productos_agotandose': Producto.objects.filter(
+            cantidad_stock__lt=F('stock_minimo')
+        ).order_by('cantidad_stock'),
+        'productos_no_vendidos': Producto.objects.exclude(
+            ventadetalle__isnull=False
+        ),
     }
-
     return render(request, 'reportes/reporte_inventario.html', context)
 
+@login_required
+@user_passes_test(is_admin_or_superuser)
+def reporte_ingresos_egresos(request):
+    tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
+    hoy = timezone.now().date()
+    
+    inicio_periodo = (
+        hoy - timezone.timedelta(days=7)
+        if tipo_tiempo == 'semanal'
+        else hoy.replace(day=1)
+    )
+    
+    inicio_periodo = timezone.make_aware(
+        timezone.datetime.combine(inicio_periodo, timezone.datetime.min.time())
+    )
+    fin_periodo = timezone.make_aware(
+        timezone.datetime.combine(hoy, timezone.datetime.max.time())
+    )
 
-import openpyxl
-from openpyxl.utils import get_column_letter
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.chart import BarChart, Reference, PieChart
-from django.http import HttpResponse
-from django.db.models import Sum, F
-from app_inventario.models import Producto
-from app_ventas.models import VentaDetalle
-from app_finanzas.models import Ingreso, Egreso
-import datetime
+    ingresos = Venta.objects.filter(
+        fecha__range=[inicio_periodo, fin_periodo]
+    ).aggregate(
+        total_ingresos=Sum('total')
+    )['total_ingresos'] or 0
 
+    egresos = Egreso.objects.filter(
+        fecha__range=[inicio_periodo, fin_periodo]
+    ).aggregate(
+        total_egresos=Sum('monto')
+    )['total_egresos'] or 0
 
-def estilizar_encabezado(celda):
-    celda.font = Font(bold=True, color="FFFFFF")
-    celda.fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-    celda.alignment = Alignment(horizontal="center", vertical="center")
-    celda.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
-                          bottom=Side(style='thin'))
-
+    context = {
+        'ingresos': ingresos,
+        'egresos': egresos,
+        'balance': ingresos - egresos,
+        'tipo_tiempo': tipo_tiempo,
+    }
+    return render(request, 'reportes/reporte_ingresos_egresos.html', context)
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def exportar_reporte_excel(request):
-    hoy = datetime.date.today()
+    hoy = timezone.now().date()
 
     # Creamos un nuevo libro de Excel
     wb = openpyxl.Workbook()
@@ -190,87 +221,15 @@ def exportar_reporte_excel(request):
     wb.save(response)
     return response
 
-
-from django.shortcuts import render
-from django.db.models import Sum
-import datetime
-from django.utils.timezone import make_aware
-
-from app_finanzas.models import Egreso
-from app_ventas.models import Venta  # Asegúrate de importar el modelo de ventas
-
-from django.shortcuts import render
-from django.db.models import Sum
-import datetime
-from django.utils.timezone import make_aware
-from app_finanzas.models import Egreso
-from app_ventas.models import Venta
-
-
-from django.shortcuts import render
-from django.db.models import Sum
-from django.utils import timezone
-from app_finanzas.models import Egreso
-from app_ventas.models import Venta
-
-@login_required
-@user_passes_test(is_admin_or_superuser)
-def reporte_ingresos_egresos(request):
-    hoy = timezone.now().date()  # Usamos timezone.now() en lugar de datetime.date.today()
-    tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
-
-    # Definir el inicio del periodo según el tipo (mensual o semanal)
-    if tipo_tiempo == 'semanal':
-        inicio_periodo = hoy - timezone.timedelta(days=7)
-    else:
-        inicio_periodo = hoy.replace(day=1)
-
-    # Ajustar las fechas a timezone-aware
-    inicio_periodo = timezone.make_aware(datetime.datetime.combine(inicio_periodo, datetime.time.min))
-    fin_periodo = timezone.make_aware(datetime.datetime.combine(hoy, datetime.time.max))
-
-    # Calcular el total de ingresos basados en las ventas
-    ingresos = Venta.objects.filter(fecha__range=[inicio_periodo, fin_periodo]).aggregate(total_ingresos=Sum('total'))['total_ingresos'] or 0
-
-    # Calcular el total de egresos
-    egresos = Egreso.objects.filter(fecha__range=[inicio_periodo, fin_periodo]).aggregate(total_egresos=Sum('monto'))['total_egresos'] or 0
-
-    # Calcular el balance
-    balance = ingresos - egresos
-
-    context = {
-        'ingresos': ingresos,
-        'egresos': egresos,
-        'balance': balance,
-        'tipo_tiempo': tipo_tiempo,
-    }
-
-    return render(request, 'reportes/reporte_ingresos_egresos.html', context)
-
-
-
-from django.shortcuts import render
-from django.db.models import Sum, F, Q
-from app_finanzas.models import Ingreso, Egreso
-from app_ventas.models import Venta
-from app_inventario.models import Producto
-from app_pedidos.models import Pedido
-
 def home(request):
-
-    productos_bajo_stock_count = Producto.objects.filter(cantidad_stock__lt=F('stock_minimo')).count()
-    productos_sin_stock_count = Producto.objects.filter(cantidad_stock=0).count()
-
-    # Contador de pedidos pendientes
-    pedidos_pendientes_count = Pedido.objects.filter(Q(estado='pedido') | Q(estado='en camino')).count()
-
     context = {
-
-
-        'productos_bajo_stock_count': productos_bajo_stock_count,
-        'productos_sin_stock_count': productos_sin_stock_count,
-        'pedidos_pendientes_count': pedidos_pendientes_count,
+        'productos_bajo_stock_count': Producto.objects.filter(
+            cantidad_stock__lt=F('stock_minimo')
+        ).count(),
+        'productos_sin_stock_count': productos_sin_stock().count(),
+        'pedidos_pendientes_count': Pedido.objects.filter(
+            Q(estado='pedido') | Q(estado='en camino')
+        ).count(),
     }
-
     return render(request, 'home.html', context)
 
