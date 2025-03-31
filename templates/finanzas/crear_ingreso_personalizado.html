@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Ingreso Personalizado{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <h2 class="section-title">Crear Ingreso Personalizado</h2>
+
+    <div class="form-container">
+        <form method="post" class="event-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="monto">Monto:</label>
+                <input type="number" 
+                       id="monto" 
+                       name="monto" 
+                       class="form-control" 
+                       step="0.01" 
+                       min="0" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" 
+                          name="descripcion" 
+                          class="form-control" 
+                          rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Crear Ingreso</button>
+                    <a href="{% url 'listar_ingresos' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 # Importaciones de Django
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -15,28 +16,78 @@ from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 @user_passes_test(is_admin_or_superuser)
 def listar_ingresos(request):
     """Vista para listar todos los ingresos"""
+    # Obtener todos los ingresos (ventas y personalizados)
     ingresos = Ingreso.objects.select_related('venta').all().order_by('-fecha')
+    
+    # Aplicar filtros si existen
+    venta_id = request.GET.get('venta')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
 
-    for ingreso in ingresos:
-        total = sum(detalle.subtotal() for detalle in ingreso.venta.detalles.all())
-        ingreso.monto = total
+    if venta_id:
+        ingresos = ingresos.filter(venta__id=venta_id)
+    if fecha_desde:
+        ingresos = ingresos.filter(fecha__gte=fecha_desde)
+    if fecha_hasta:
+        ingresos = ingresos.filter(fecha__lte=fecha_hasta)
 
-    return render(request, 'finanzas/listar_ingresos.html', {'ingresos': ingresos})
+    return render(request, 'finanzas/listar_ingresos.html', {
+        'ingresos': ingresos,
+    })
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def detalle_ingreso(request, ingreso_id):
-    """Vista para ver el detalle de un ingreso específico"""
-    ingreso = Ingreso.objects.get(id=ingreso_id)
-    detalles = ingreso.venta.detalles.all()
-    total = sum(detalle.subtotal() for detalle in detalles)
+    ingreso = get_object_or_404(Ingreso, id=ingreso_id)
 
     context = {
         'ingreso': ingreso,
-        'detalles': detalles,
-        'total': total,
     }
+
+    if ingreso.venta:
+        # Calcular totales usando los campos correctos del modelo VentaDetalle
+        detalles = ingreso.venta.detalles.all()
+        total = sum(detalle.precio_total for detalle in detalles)
+        context.update({
+            'detalles': detalles,
+            'total': total,
+            'subtotal': ingreso.venta.subtotal,  # Using the property from Venta model
+            'iva': ingreso.venta.iva  # Using the property from Venta model
+        })
+
     return render(request, 'finanzas/detalle_ingreso.html', context)
+
+@login_required
+@user_passes_test(is_admin_or_superuser)
+def eliminar_ingreso(request, ingreso_id):
+    """Vista para eliminar un ingreso"""
+    ingreso = get_object_or_404(Ingreso, id=ingreso_id)
+    if request.method == 'POST':
+        ingreso.delete()
+        messages.success(request, 'Ingreso eliminado exitosamente.')
+        return redirect('listar_ingresos')
+    return render(request, 'finanzas/eliminar_ingreso.html', {'ingreso': ingreso})
+
+@login_required
+@user_passes_test(is_admin_or_superuser)
+def crear_ingreso_personalizado(request):
+    """Vista para crear un ingreso personalizado"""
+    if request.method == 'POST':
+        try:
+            monto = Decimal(request.POST.get('monto'))
+            descripcion = request.POST.get('descripcion')
+            
+            Ingreso.objects.create(
+                monto=monto,
+                descripcion=descripcion,
+                tipo='personalizado'
+            )
+            messages.success(request, '¡Ingreso personalizado creado exitosamente!')
+            return redirect('listar_ingresos')
+        except Exception as e:
+            messages.error(request, f'Error al crear el ingreso: {str(e)}')
+    
+    return render(request, 'finanzas/crear_ingreso_personalizado.html')
 
 # Vistas de egresos
 @login_required
@@ -89,9 +140,11 @@ def crear_egreso_personalizado(request):
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
-def eliminar_egreso_personalizado(request, egreso_id):
-    """Vista para eliminar un egreso personalizado"""
-    egreso = get_object_or_404(Egreso, id=egreso_id, tipo='personalizado')
-    egreso.delete()
-    messages.success(request, 'Egreso personalizado eliminado exitosamente.')
-    return redirect('listar_egresos')
+def eliminar_egreso(request, egreso_id):
+    """Vista para eliminar un egreso"""
+    egreso = get_object_or_404(Egreso, id=egreso_id)
+    if request.method == 'POST':
+        egreso.delete()
+        messages.success(request, 'Egreso eliminado exitosamente.')
+        return redirect('listar_egresos')
+    return render(request, 'finanzas/eliminar_egreso.html', {'egreso': egreso})

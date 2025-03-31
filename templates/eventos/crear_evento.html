@@ -1,31 +1,50 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h2>Crear Evento</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label>Nombre del Cliente</label>
-            <input type="text" name="nombre" class="form-control" required>
+<div class="wrapper">
+    <h2 class="section-title">Crear Evento</h2>
+    <div class="form-container">
+        {% if messages %}
+        <div class="form-messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
         </div>
-        <div class="form-group">
-            <label>Teléfono</label>
-            <input type="text" name="telefono" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Descripción del Evento</label>
-            <textarea name="descripcion" class="form-control" required></textarea>
-        </div>
-        <div class="form-group">
-            <label>Fecha del Evento</label>
-            <input type="datetime-local" name="fecha_evento" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Crear Evento</button>
-    </form>
+        {% endif %}
+
+        <form method="post" class="event-form">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Cliente</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="fecha_evento">Fecha del Evento</label>
+                    <input type="datetime-local" id="fecha_evento" name="fecha_evento" class="form-control" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="descripcion">Descripción del Evento</label>
+                    <textarea id="descripcion" name="descripcion" class="form-control" rows="4" required></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Crear Evento</button>
+                    <a href="{% url 'listar_eventos' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

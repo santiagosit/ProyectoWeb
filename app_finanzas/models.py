@@ -1,15 +1,25 @@
 from django.db import models
+from django.core.validators import DecimalValidator
+from decimal import Decimal
 from app_ventas.models import Venta
 from app_pedidos.models import Pedido
 
 class Ingreso(models.Model):
-    venta = models.OneToOneField(Venta, on_delete=models.CASCADE, related_name='ingreso')
-    fecha = models.DateTimeField(auto_now_add=True)
+    TIPO_CHOICES = [
+        ('venta', 'Venta'),
+        ('personalizado', 'Personalizado'),
+    ]
+    
+    venta = models.OneToOneField('app_ventas.Venta', on_delete=models.CASCADE, null=True, blank=True)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha = models.DateTimeField(auto_now_add=True)
     descripcion = models.TextField(blank=True, null=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='venta')
 
     def __str__(self):
-        return f'Ingreso - Venta {self.venta.id} - {self.monto}'
+        if self.venta:
+            return f'Ingreso de Venta #{self.venta.id}'
+        return f'Ingreso Personalizado #{self.id}'
 
 # app_finanzas/models.py
 class Egreso(models.Model):

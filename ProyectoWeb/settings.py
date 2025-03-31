@@ -61,9 +61,7 @@ INSTALLED_APPS = [
     'app_ventas',
     'app_administracion',
     'app_eventos',
-'django_ses',
-
-
+    'django_ses',
 ]
 
 MIDDLEWARE = [
@@ -177,4 +175,6 @@ LOGIN_EXEMPT_URLS = [
     r'^verificar_pin/$',
     r'^reset_password/.*$',
 ]
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
