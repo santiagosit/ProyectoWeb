@@ -16,17 +16,12 @@ def crear_ingreso_por_venta(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Pedido)
 def crear_egreso_por_pedido(sender, instance, created, **kwargs):
-    # Solo crear Egreso cuando el pedido cambia a 'recibido'
-    if not created:
-        if instance.estado == 'recibido' and not hasattr(instance, 'egreso'):
-            # Calcula el monto total del pedido
-            total_pedido = 0
-            for detalle in instance.detalles():
-                # Asumiendo que 'precio' en Producto es el costo para el egreso
-                total_pedido += detalle.cantidad * detalle.producto.precio
-
+    if not created and instance.estado == 'recibido':
+        # Verificar si ya existe un egreso para este pedido
+        if not Egreso.objects.filter(pedido=instance).exists():
             Egreso.objects.create(
                 pedido=instance,
-                monto=total_pedido,
-                descripcion=f'Egreso por Pedido ID {instance.id}'
+                monto=instance.total,
+                fecha=instance.fecha_pedido,
+                tipo='pedido'
             )

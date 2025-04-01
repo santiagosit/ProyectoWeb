@@ -22,7 +22,9 @@
         <button id="filtroButton" class="btn btn-primary">
             <i class="fas fa-filter"></i> Filtros
         </button>
-        <a href="{% url 'crear_administrador' %}" class="cta-btn">Crear Nuevo Administrador</a>
+        <a href="{% url 'crear_administrador' %}" class="cta-btn">
+            <i class="fas fa-user-plus"></i> Crear Nuevo Administrador
+        </a>
     </div>
 
     <!-- Modal para filtros -->
@@ -75,8 +77,12 @@
                     <td>{{ admin.direccion }}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{% url 'editar_administrador' admin.id %}" class="btn btn-warning btn-sm">Editar</a>
-                            <a href="{% url 'eliminar_administrador' admin.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            <a href="{% url 'editar_administrador' admin.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'eliminar_administrador' admin.id %}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </a>
                         </div>
                     </td>
                 </tr>

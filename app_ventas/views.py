@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from decimal import Decimal
+from django.utils import timezone
+from django.db.models import Sum
 
 # Local imports
 from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
@@ -161,13 +163,13 @@ def registrar_venta(request):
                             total=total
                         )
 
-                        # Crear los detalles y actualizar stock
+                        # Crear los detalles (el modelo se encargará del stock)
                         for item in productos_venta:
                             producto = Producto.objects.get(id=item['producto_id'])
                             cantidad = int(item['cantidad'])
                             precio_unitario = Decimal(item['precio_unitario'])
                             
-                            # Verificar stock nuevamente antes de crear el detalle
+                            # Verificar stock antes de crear el detalle
                             if producto.cantidad_stock < cantidad:
                                 raise ValueError(f'Stock insuficiente para {producto.nombre}')
                             
@@ -178,10 +180,6 @@ def registrar_venta(request):
                                 precio_unitario=precio_unitario,
                                 precio_total=Decimal(item['subtotal'])
                             )
-                            
-                            # Actualizar stock
-                            producto.cantidad_stock -= cantidad
-                            producto.save()
 
                         # Completar venta
                         venta.completar_venta()
@@ -192,7 +190,9 @@ def registrar_venta(request):
                         request.session.modified = True
                         
                         messages.success(request, 'Venta registrada exitosamente')
-                        return redirect('detalle_venta', venta_id=venta.id)
+                        if request.user.profile.rol == 'Empleado':
+                            return redirect('detalle_venta', venta_id=venta.id)
+                        return redirect('listar_ventas')
 
                 except Exception as e:
                     messages.error(request, f'Error al procesar la venta: {str(e)}')
@@ -241,7 +241,9 @@ def confirmar_venta(request):
                 request.session['productos_venta'] = []
                 request.session['venta_total'] = '0'
                 messages.success(request, 'Venta registrada exitosamente')
-                return redirect('detalle_venta', venta_id=venta.id)
+                if request.user.profile.rol == 'Empleado':
+                    return redirect('detalle_venta', venta_id=venta.id)
+                return redirect('listar_ventas')
                 
         except Exception as e:
             messages.error(request, f'Error al procesar la venta: {str(e)}')
@@ -255,20 +257,32 @@ def confirmar_venta(request):
 @user_passes_test(is_employee_or_above)
 def detalle_venta(request, venta_id):
     try:
-        venta = get_object_or_404(Venta, id=venta_id)
+        # Verificar si el usuario es empleado y es su venta
+        if request.user.profile.rol == 'Empleado':
+            venta = get_object_or_404(Venta, id=venta_id, empleado=request.user.profile)
+            template = 'ventas/detalle_venta_empleado.html'
+        else:
+            venta = get_object_or_404(Venta, id=venta_id)
+            template = 'ventas/detalle_venta.html'
+
         detalles = venta.detalles.all()
         
         context = {
             'venta': venta,
             'detalles': detalles,
             'subtotal': venta.subtotal,
-            'iva': venta.iva,
             'total': venta.total
         }
         
-        return render(request, 'ventas/detalle_venta.html', context)
+        # Añadir IVA solo para vista de admin
+        if request.user.profile.rol != 'Empleado':
+            context['iva'] = venta.iva
+        
+        return render(request, template, context)
     except Exception as e:
         messages.error(request, f'Error al mostrar el detalle: {str(e)}')
+        if request.user.profile.rol == 'Empleado':
+            return redirect('mis_ventas')
         return redirect('listar_ventas')
 
 @login_required
@@ -330,3 +344,26 @@ def editar_venta(request, venta_id):
         'venta': venta,
         'detalles': detalles
     })
+
+@login_required
+def mis_ventas(request):
+    today = timezone.now().date()
+    
+    # Get employee's sales
+    ventas = Venta.objects.filter(
+        empleado=request.user.profile
+    ).order_by('-fecha_creacion')
+
+    # Calculate today's stats
+    ventas_hoy = ventas.filter(fecha_creacion__date=today)
+    total_ventas_hoy = ventas_hoy.aggregate(
+        total=Sum('total')
+    )['total'] or 0
+    
+    context = {
+        'ventas': ventas,
+        'total_ventas_hoy': total_ventas_hoy,
+        'num_ventas_hoy': ventas_hoy.count(),
+    }
+    
+    return render(request, 'ventas/mis_ventas.html', context)

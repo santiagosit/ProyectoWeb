@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 from .models import PedidoDetalle, Pedido, Producto, Proveedor
 from .forms import PedidoForm, ProveedorForm
+from decimal import Decimal
 
 # Protected views - Employee level access
 @login_required
@@ -42,51 +43,57 @@ def listar_pedidos(request):
     return render(request, 'pedidos/listar_pedidos.html', context)
 
 
+# Protected views - Admin level access
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def listar_proveedores(request):
     proveedores = Proveedor.objects.all()
-    return render(request, 'pedidos/listar_proveedores.html', 
-                 {'proveedores': proveedores})
+    return render(request, 'pedidos/listar_proveedores.html', {'proveedores': proveedores})
 
 
-# Protected views - Admin level access
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def registrar_pedido(request):
     if request.method == 'POST':
         pedido_form = PedidoForm(request.POST)
-        productos = request.POST.getlist('productos[]')
-        cantidades = request.POST.getlist('cantidades[]')
-        costos = request.POST.getlist('costos_unitarios[]')
-
-        if pedido_form.is_valid() and productos and cantidades and costos:
+        if pedido_form.is_valid():
             pedido = pedido_form.save()
-            total_pedido = 0
-
-            for producto_id, cantidad, costo in zip(productos, cantidades, costos):
-                producto = Producto.objects.get(id=producto_id)
-                cantidad = int(cantidad)
-                costo = float(costo)
-                
-                PedidoDetalle.objects.create(
-                    pedido=pedido,
-                    producto=producto,
-                    cantidad=cantidad,
-                    costo_unitario=costo
-                )
-                total_pedido += cantidad * costo
-
-            pedido.total = total_pedido
-            pedido.save()
-            return redirect('listar_pedidos')
+            
+            # Obtener los datos de los productos
+            productos = request.POST.getlist('productos[]')
+            cantidades = request.POST.getlist('cantidades[]')
+            costos = request.POST.getlist('costos_unitarios[]')
+            
+            # Validar que haya al menos un producto
+            if not productos:
+                pedido.delete()
+                messages.error(request, 'Debe agregar al menos un producto al pedido.')
+                return render(request, 'pedidos/registrar_pedido.html', {
+                    'pedido_form': PedidoForm(),
+                    'productos': Producto.objects.all()
+                })
+            
+            # Crear los detalles del pedido
+            try:
+                for producto_id, cantidad, costo in zip(productos, cantidades, costos):
+                    PedidoDetalle.objects.create(
+                        pedido=pedido,
+                        producto_id=int(producto_id),
+                        cantidad=int(cantidad),
+                        costo_unitario=Decimal(costo)
+                    )
+                messages.success(request, 'Pedido registrado exitosamente.')
+                return redirect('listar_pedidos')
+            except Exception as e:
+                pedido.delete()
+                messages.error(request, f'Error al registrar el pedido: {str(e)}')
     else:
         pedido_form = PedidoForm()
-
-    context = {
+    
+    return render(request, 'pedidos/registrar_pedido.html', {
         'pedido_form': pedido_form,
-        'productos': Producto.objects.all(),
-        'proveedores': Proveedor.objects.all(),
-    }
-    return render(request, 'pedidos/registrar_pedido.html', context)
+        'productos': Producto.objects.all()
+    })
 
 
 @login_required
@@ -95,48 +102,93 @@ def registrar_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
         if form.is_valid():
-            form.save()
+            proveedor = form.save()
+            messages.success(request, '¡Proveedor registrado exitosamente!')
             return redirect('listar_proveedores')
+        else:
+            messages.error(request, 'Por favor corrija los errores en el formulario.')
     else:
         form = ProveedorForm()
+    
     return render(request, 'pedidos/registrar_proveedor.html', {'form': form})
 
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
-def actualizar_estado_pedido(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id)
+def editar_proveedor(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    
     if request.method == 'POST':
-        if estado := request.POST.get('estado'):
-            pedido.estado = estado
-            pedido.save()
-            if estado == 'recibido':
-                for detalle in PedidoDetalle.objects.filter(pedido=pedido):
-                    detalle.actualizar_stock()
-        return redirect('listar_pedidos')
-    return render(request, 'pedidos/actualizar_estado_pedido.html', 
-                 {'pedido': pedido})
+        form = ProveedorForm(request.POST, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '¡Proveedor actualizado exitosamente!')
+            return redirect('listar_proveedores')
+        else:
+            messages.error(request, 'Por favor corrija los errores en el formulario.')
+    else:
+        form = ProveedorForm(instance=proveedor)
+    
+    return render(request, 'pedidos/editar_proveedor.html', {
+        'form': form,
+        'proveedor': proveedor
+    })
 
 
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def eliminar_proveedor(request, proveedor_id):
     proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    
     if request.method == 'POST':
-        proveedor.delete()
-        messages.success(
-            request, 
-            f'El proveedor {proveedor.nombre} ha sido eliminado correctamente.'
-        )
+        try:
+            proveedor.delete()
+            messages.success(request, '¡Proveedor eliminado exitosamente!')
+        except Exception as e:
+            messages.error(request, f'No se pudo eliminar el proveedor: {str(e)}')
         return redirect('listar_proveedores')
-    return render(request, 'pedidos/eliminar_proveedor_confirmacion.html', 
-                 {'proveedor': proveedor})
+    
+    return render(request, 'pedidos/eliminar_proveedor.html', {'proveedor': proveedor})
+
+
+@login_required
+@user_passes_test(is_admin_or_superuser)
+def actualizar_estado_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    if pedido.estado == 'recibido':
+        messages.error(request, 'No se puede modificar un pedido ya recibido.')
+        return redirect('listar_pedidos')
+
+    if request.method == 'POST':
+        nuevo_estado = request.POST.get('estado')
+        if nuevo_estado:
+            pedido.estado = nuevo_estado
+            pedido.save()
+            
+            if nuevo_estado == 'recibido':
+                # Actualizar stock cuando el pedido se marca como recibido
+                for detalle in pedido.detalles.all():  # Changed from pedido.detalles()
+                    detalle.actualizar_stock()
+                messages.success(request, 'Pedido marcado como recibido y stock actualizado.')
+            else:
+                messages.success(request, 'Estado del pedido actualizado exitosamente.')
+                
+            return redirect('listar_pedidos')
+    
+    return render(request, 'pedidos/actualizar_estado_pedido.html', {'pedido': pedido})
 
 
 # Utility views
+@login_required
+@user_passes_test(is_admin_or_superuser)
 def detalles_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
-    return render(request, 'pedidos/detalles_pedido.html', {'pedido': pedido})
+    detalles = pedido.detalles.all()
+    return render(request, 'pedidos/detalles_pedido.html', {
+        'pedido': pedido,
+        'detalles': detalles
+    })
 
 
 def filtro_opciones(request):

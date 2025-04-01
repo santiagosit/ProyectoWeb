@@ -20,7 +20,9 @@
         <button id="filtroButton" class="btn btn-primary">
             <i class="fas fa-filter"></i> Filtros
         </button>
-        <a href="{% url 'crear_evento' %}" class="cta-btn">Crear Nuevo Evento</a>
+        <a href="{% url 'crear_evento' %}" class="cta-btn">
+            <i class="fas fa-calendar-plus"></i> Crear Nuevo Evento
+        </a>
     </div>
 
     <!-- Modal para filtros -->
@@ -80,8 +82,12 @@
                     <td>{{ evento.fecha_evento }}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{% url 'editar_evento' evento.id %}" class="btn btn-warning btn-sm">Editar</a>
-                            <a href="{% url 'eliminar_evento' evento.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            <a href="{% url 'editar_evento' evento.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'eliminar_evento' evento.id %}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </a>
                         </div>
                     </td>
                 </tr>

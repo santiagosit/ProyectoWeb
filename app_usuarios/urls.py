@@ -4,8 +4,8 @@ from .views import recuperar_password, verificar_pin,enviar_pin
 
 urlpatterns = [
     # Usuarios
-    path('', views.login_view, name='login'),
-    path('login/', views.iniciar_sesion, name='login'),
+    path('', views.iniciar_sesion, name='login'),
+    path('login/', views.iniciar_sesion, name='iniciar_sesion'),
     path('home/', views.home, name='home'),
     path('recuperar/', views.recuperar_password, name='recuperar_password'),
     path('verificar_pin/', views.verificar_pin, name='verificar_pin'),
@@ -30,4 +30,5 @@ urlpatterns = [
     path('empleado/confirmar-edicion/<int:empleado_id>/', views.confirmar_edicion_empleado, name='confirmar_edicion_empleado'),
     path('empleado/<int:empleado_id>/editar/', views.editar_empleado, name='editar_empleado'),
     path('empleado/<int:empleado_id>/confirmar-edicion/', views.confirmar_edicion_empleado, name='confirmar_edicion_empleado'),
+    path('empleado/dashboard/', views.empleado_dashboard, name='empleado_dashboard'),
 ]

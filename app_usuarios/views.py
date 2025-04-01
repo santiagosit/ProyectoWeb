@@ -14,13 +14,20 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.urls import reverse
-from django.contrib import messages  # Add this import at the top
+from django.contrib import messages
+from django.db.models import Sum, F, Count  # Change this import
+from decimal import Decimal
 
 # Importaciones locales
 from ProyectoWeb import settings
+from app_finanzas.models import Egreso, Ingreso
+from app_inventario.models import Producto
+from app_pedidos.models import Pedido
+from app_ventas.models import Venta, VentaDetalle  # Añadir VentaDetalle
 from .forms import UserForm, ProfileForm
 from .models import Profile, PIN
-from .utils import is_admin_or_superuser, is_employee_or_above
+from .utils import is_admin_or_superuser, is_employee_or_above, employee_required
+from app_eventos.models import Evento
 
 # Vistas de autenticación
 def login_view(request):
@@ -30,13 +37,21 @@ def login_view(request):
 def iniciar_sesion(request):
     """Vista para procesar el inicio de sesión"""
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
+        
         if user is not None:
             login(request, user)
-            return redirect('home')
-        return render(request, 'usuarios/login.html', {'error': 'Credenciales incorrectas'})
+            if hasattr(user, 'profile'):
+                if user.profile.rol == 'Empleado':
+                    return redirect('empleado_dashboard')
+                elif user.profile.rol == 'Administrador' or user.is_superuser:
+                    return redirect('home')
+            messages.error(request, 'Usuario sin perfil asignado')
+        else:
+            messages.error(request, 'Credenciales incorrectas')
+        return render(request, 'usuarios/login.html')
     return render(request, 'usuarios/login.html')
 
 def logout_view(request):
@@ -45,10 +60,95 @@ def logout_view(request):
     return redirect('login')
 
 @login_required
-@user_passes_test(is_employee_or_above)
 def home(request):
-    """Vista de la página principal"""
-    return render(request, 'usuarios/home.html')
+    # Quitar el espacio extra después de 'Empleado'
+    if request.user.profile.rol == 'Empleado':
+        return redirect('empleado_dashboard')
+    today = timezone.now()
+    start_of_month = today.replace(day=1)
+
+    # Estadísticas financieras
+    ingresos_hoy = Ingreso.objects.filter(fecha__date=today.date()).aggregate(total=Sum('monto'))['total'] or 0
+    egresos_hoy = Egreso.objects.filter(fecha__date=today.date()).aggregate(total=Sum('monto'))['total'] or 0
+    ingresos_mes = Ingreso.objects.filter(fecha__gte=start_of_month).aggregate(total=Sum('monto'))['total'] or 0
+    egresos_mes = Egreso.objects.filter(fecha__gte=start_of_month).aggregate(total=Sum('monto'))['total'] or 0
+    balance_mes = ingresos_mes - egresos_mes
+
+    # Ventas
+    ventas_hoy = Venta.objects.filter(fecha_creacion__date=today.date()).count()
+    ultimas_ventas = Venta.objects.all().order_by('-fecha_creacion')[:5]
+
+    # Eventos
+    eventos_pendientes_count = Evento.objects.filter(estado='Pendiente').count()
+    eventos_proximos = Evento.objects.filter(fecha_evento__gte=today).order_by('fecha_evento')[:5]
+
+    # Inventario
+    productos_sin_stock_count = Producto.objects.filter(stock=0).count()
+    productos_bajo_stock_count = Producto.objects.filter(stock__lte=10, stock__gt=0).count()
+    productos_stock_normal_count = Producto.objects.filter(stock__gt=10).count()
+
+    # Pedidos
+    pedidos_pendientes = Pedido.objects.filter(estado='Pendiente').order_by('-fecha_pedido')[:5]
+
+    context = {
+        'today': today,
+        'ingresos_hoy': ingresos_hoy,
+        'egresos_hoy': egresos_hoy,
+        'ingresos_mes': ingresos_mes,
+        'egresos_mes': egresos_mes,
+        'balance_mes': balance_mes,
+        'ventas_hoy': ventas_hoy,
+        'ultimas_ventas': ultimas_ventas,
+        'eventos_pendientes_count': eventos_pendientes_count,
+        'eventos_proximos': eventos_proximos,
+        'productos_sin_stock_count': productos_sin_stock_count,
+        'productos_bajo_stock_count': productos_bajo_stock_count,
+        'productos_stock_normal_count': productos_stock_normal_count,
+        'pedidos_pendientes': pedidos_pendientes,
+    }
+
+    return render(request, 'home.html', context)
+
+@login_required
+def empleado_dashboard(request):
+    """Dashboard para empleados"""
+    # Verificar que sea empleado
+    if not hasattr(request.user, 'profile') or request.user.profile.rol != 'Empleado':
+        return redirect('home')
+
+    today = timezone.now()
+    start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Ventas del empleado
+    ventas_hoy = Venta.objects.filter(
+        empleado=request.user.profile,
+        fecha_creacion__date=today.date()
+    )
+    
+    ventas_mes = Venta.objects.filter(
+        empleado=request.user.profile,
+        fecha_creacion__gte=start_of_month
+    )
+
+    # Estadísticas
+    total_ventas_hoy = ventas_hoy.aggregate(
+        total=Sum('total')
+    )['total'] or Decimal('0')
+
+    total_ventas_mes = ventas_mes.aggregate(
+        total=Sum('total')
+    )['total'] or Decimal('0')
+
+    context = {
+        'today': today,
+        'total_ventas_hoy': total_ventas_hoy,
+        'total_ventas_mes': total_ventas_mes,
+        'cantidad_ventas_hoy': ventas_hoy.count(),
+        'cantidad_ventas_mes': ventas_mes.count(),
+        'ultimas_ventas': ventas_hoy.order_by('-fecha_creacion')[:5],
+    }
+
+    return render(request, 'usuarios/empleado_dashboard.html', context)
 
 # Vistas de gestión de administradores
 @login_required
@@ -146,8 +246,8 @@ def editar_administrador(request, admin_id):
             }
             return redirect('confirmar_edicion_admin', admin_id=admin.id)
     else:
-        user_form = UserForm(instance=admin.user, edit_mode=True)
-        profile_form = ProfileForm(instance=admin)
+        user_form = UserForm(request.POST, instance=admin.user, edit_mode=True)
+        profile_form = ProfileForm(request.POST, instance=admin)
     
     return render(request, 'usuarios/Administrador/editar_administrador.html', {
         'user_form': user_form,
@@ -310,7 +410,7 @@ def confirmar_creacion_empleado(request):
             return redirect('crear_empleado')
         except Exception as e:
             if 'user' in locals():
-                user.delete()
+                user.delete()    
             messages.error(request, f'Error al crear el empleado: {str(e)}')
             return redirect('crear_empleado')
     
@@ -375,8 +475,8 @@ def editar_empleado(request, empleado_id):
                     for error in errors:
                         messages.error(request, f"{field}: {error}")
     else:
-        user_form = UserForm(instance=empleado.user, edit_mode=True)
-        profile_form = ProfileForm(instance=empleado)
+        user_form = UserForm(request.POST, instance=empleado.user, edit_mode=True)
+        profile_form = ProfileForm(request.POST, instance=empleado)
     
     return render(request, 'usuarios/Empleado/editar_empleado.html', {
         'user_form': user_form,

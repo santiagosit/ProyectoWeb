@@ -1,10 +1,11 @@
 # Importaciones de Django
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 
 # Importaciones locales
 from .models import Ingreso, Egreso
@@ -74,16 +75,24 @@ def crear_ingreso_personalizado(request):
     """Vista para crear un ingreso personalizado"""
     if request.method == 'POST':
         try:
-            monto = Decimal(request.POST.get('monto'))
-            descripcion = request.POST.get('descripcion')
-            
-            Ingreso.objects.create(
-                monto=monto,
-                descripcion=descripcion,
-                tipo='personalizado'
-            )
-            messages.success(request, '¡Ingreso personalizado creado exitosamente!')
-            return redirect('listar_ingresos')
+            monto = request.POST.get('monto')
+            if monto:
+                monto = Decimal(monto)
+                descripcion = request.POST.get('descripcion', '')
+                
+                ingreso = Ingreso.objects.create(
+                    monto=monto,
+                    descripcion=descripcion,
+                    tipo='personalizado',
+                    fecha=timezone.now()
+                )
+                
+                messages.success(request, f'Ingreso personalizado de ${monto:,.2f} creado exitosamente.')
+                return redirect('listar_ingresos')
+            else:
+                messages.error(request, 'El monto es requerido.')
+        except InvalidOperation:
+            messages.error(request, 'Error en el monto: asegúrese de ingresar un número válido.')
         except Exception as e:
             messages.error(request, f'Error al crear el ingreso: {str(e)}')
     
@@ -109,8 +118,10 @@ def detalle_egreso(request, egreso_id):
     egreso = get_object_or_404(Egreso, id=egreso_id)
 
     if egreso.tipo == 'pedido' and egreso.pedido is not None:
-        detalles = egreso.pedido.detalles()
-        total = sum(detalle.subtotal() for detalle in detalles)
+        # Usar .all() para acceder a los detalles a través del related_name
+        detalles = egreso.pedido.detalles.all()
+        # Calcular el total usando la propiedad subtotal de cada detalle
+        total = sum(detalle.subtotal for detalle in detalles)
     else:
         detalles = None
         total = egreso.monto

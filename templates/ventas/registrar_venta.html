@@ -41,7 +41,7 @@
                        min="1" value="1" class="form-control" required>
             </div>
             <button type="submit" name="agregar_producto" class="btn btn-primary">
-                Añadir Producto
+                <i class="fas fa-plus"></i> Añadir Producto
             </button>
         </form>
     </div>
@@ -72,7 +72,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="eliminar_producto" value="{{ forloop.counter0 }}">
                                 <button type="submit" class="btn btn-danger btn-sm">
-                                    Eliminar
+                                    <i class="fas fa-trash-alt"></i> Eliminar
                                 </button>
                             </form>
                         </td>
@@ -106,10 +106,12 @@
             <button type="submit" name="confirmar_venta" 
                     class="btn btn-success" 
                     {% if not productos_venta %}disabled{% endif %}>
-                Confirmar Venta
+                <i class="fas fa-check"></i> Confirmar Venta
             </button>
         </form>
-        <a href="{% url 'home' %}" class="btn btn-secondary mt-2">Volver al Inicio</a>
+        <a href="{% url 'home' %}" class="btn btn-secondary mt-2">
+            <i class="fas fa-arrow-left"></i> Volver al Inicio
+        </a>
     </div>
 </div>
 
@@ -130,6 +132,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value > stock) {
             this.value = stock;
             alert('La cantidad no puede superar el stock disponible');
+        }
+    });
+
+    // After successful sale, redirect based on role
+    const messages = JSON.parse('{{ messages|safe|escapejs }}');
+    messages.forEach(message => {
+        if (message.tags === 'success') {
+            const userRole = '{{ request.user.profile.rol }}';
+            if (userRole === 'Empleado') {
+                window.location.href = "{% url 'mis_ventas' %}";
+            } else {
+                window.location.href = "{% url 'listar_ventas' %}";
+            }
         }
     });
 });

@@ -1,25 +1,36 @@
 <!-- templates/finanzas/listar_egresos.html -->
 {% extends "base.html" %}
 
+{% block title %}Lista de Egresos{% endblock %}
+
 {% block content %}
 <div class="wrapper">
     <h2 class="section-title">Lista de Egresos</h2>
     
+    {% if messages %}
+    <div class="form-messages">
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     <div class="filters-section">
-        <div class="action-buttons">
-            <button id="filtroButton" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filtros
-            </button>
-            <a href="{% url 'crear_egreso_personalizado' %}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Crear Egreso Personalizado
-            </a>
-        </div>
+        <button id="filtroButton" class="btn btn-primary">
+            <i class="fas fa-filter"></i> Filtros
+        </button>
+        <a href="{% url 'crear_egreso_personalizado' %}" class="cta-btn">Crear Egreso Personalizado</a>
     </div>
 
+    <!-- Modal para filtros -->
     <div id="filtroModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <form id="filtroForm" method="GET">
+            <form id="filtroForm" method="GET" action="{% url 'listar_egresos' %}">
                 <h3>Filtrar Egresos</h3>
                 
                 <div class="form-group">
@@ -32,11 +43,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="filtro-fecha">Fecha:</label>
+                    <label for="filtro-fecha">Rango de Fechas:</label>
                     <div class="date-range">
-                        <input type="date" id="filtro-fecha-desde" name="fecha_desde" class="form-control">
+                        <input type="date" id="filtro-fecha-desde" name="fecha_desde" 
+                               class="form-control" value="{{ request.GET.fecha_desde }}">
                         <span>hasta</span>
-                        <input type="date" id="filtro-fecha-hasta" name="fecha_hasta" class="form-control">
+                        <input type="date" id="filtro-fecha-hasta" name="fecha_hasta" 
+                               class="form-control" value="{{ request.GET.fecha_hasta }}">
                     </div>
                 </div>
 
@@ -117,19 +130,25 @@
 </div>
 
 <script>
-    document.getElementById('filtroButton').onclick = function() {
-        document.getElementById('filtroModal').style.display = 'block';
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal handling
+        const modal = document.getElementById('filtroModal');
+        const btn = document.getElementById('filtroButton');
+        const span = document.querySelector('.close');
 
-    document.querySelector('.close').onclick = function() {
-        document.getElementById('filtroModal').style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-        var modal = document.getElementById('filtroModal');
-        if (event.target == modal) {
-            modal.style.display = 'none';
+        btn.onclick = function() {
+            modal.style.display = "block";
         }
-    }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    });
 </script>
 {% endblock %}

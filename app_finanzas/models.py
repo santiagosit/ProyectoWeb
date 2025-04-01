@@ -16,10 +16,18 @@ class Ingreso(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='venta')
 
+    class Meta:
+        ordering = ['-fecha']
+
+    @property
+    def subtotal(self):
+        """Calcular el subtotal basado en el tipo de ingreso"""
+        return self.monto
+
     def __str__(self):
         if self.venta:
-            return f'Ingreso de Venta #{self.venta.id}'
-        return f'Ingreso Personalizado #{self.id}'
+            return f'Ingreso de Venta #{self.venta.id} - ${self.monto}'
+        return f'Ingreso Personalizado - ${self.monto}'
 
 # app_finanzas/models.py
 class Egreso(models.Model):

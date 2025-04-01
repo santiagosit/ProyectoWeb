@@ -93,7 +93,7 @@ class VentaDetalle(models.Model):
         if not self.pk:  # Nuevo detalle
             if self.producto.cantidad_stock < self.cantidad:
                 raise ValueError(f'Stock insuficiente para {self.producto.nombre}')
-            self.producto.cantidad_stock -= self.cantidad
+            self.producto.cantidad_stock -= self.cantidad  # Primera reducción
             self.producto.save()
         else:  # Detalle existente
             original = VentaDetalle.objects.get(pk=self.pk)
