@@ -26,6 +26,7 @@ urlpatterns = [
     path('ventas/', include('app_ventas.urls')),
     path('reportes/', include('app_reportes.urls')),
     path('eventos/', include('app_eventos.urls')),  # Cambiar a una ruta específica
+    path('predicciones/', include('app_predicciones.urls')),
     #path('pagos/', include('app_pagos.urls')),
 ]
 

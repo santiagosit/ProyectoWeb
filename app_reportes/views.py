@@ -29,6 +29,7 @@ from app_inventario.models import Producto
 from app_ventas.models import Venta, VentaDetalle
 from app_finanzas.models import Ingreso, Egreso
 from app_pedidos.models import Pedido
+from .models import EstadisticaVenta
 
 # Helper functions
 def estilizar_encabezado(celda):
@@ -42,6 +43,59 @@ def estilizar_encabezado(celda):
         top=Side(style='thin'),
         bottom=Side(style='thin')
     )
+
+@login_required
+def estadisticas_ventas(request):
+    fecha_actual = timezone.now().date()
+    productos = Producto.objects.all()
+    estadisticas = []
+
+    for producto in productos:
+        # Obtener ventas del día
+        ventas_hoy = VentaDetalle.objects.filter(
+            producto=producto,
+            venta__fecha_creacion__date=fecha_actual
+        ).aggregate(
+            cantidad_total=Sum('cantidad'),
+            ingreso_total=Sum(F('cantidad') * F('precio_unitario'))
+        )
+
+        # Calcular días sin venta
+        ultima_venta = VentaDetalle.objects.filter(
+            producto=producto,
+            venta__fecha_creacion__date__lt=fecha_actual
+        ).order_by('-venta__fecha_creacion').first()
+
+        dias_sin_venta = 0
+        if ultima_venta:
+            dias_sin_venta = (fecha_actual - ultima_venta.venta.fecha_creacion.date()).days
+
+        # Calcular rotación de inventario
+        ventas_mes = VentaDetalle.objects.filter(
+            producto=producto,
+            venta__fecha_creacion__date__gte=fecha_actual - timedelta(days=30)
+        ).aggregate(total_vendido=Sum('cantidad'))['total_vendido'] or 0
+
+        rotacion = 0
+        if producto.stock_actual > 0:
+            rotacion = ventas_mes / producto.stock_actual
+
+        # Crear o actualizar estadística
+        estadistica, _ = EstadisticaVenta.objects.update_or_create(
+            producto=producto,
+            fecha=fecha_actual,
+            defaults={
+                'cantidad_vendida': ventas_hoy['cantidad_total'] or 0,
+                'ingreso_total': ventas_hoy['ingreso_total'] or 0,
+                'rotacion_inventario': rotacion,
+                'dias_sin_venta': dias_sin_venta
+            }
+        )
+        estadisticas.append(estadistica)
+
+    return render(request, 'reportes/estadisticas_ventas.html', {
+        'estadisticas': estadisticas
+    })
 
 def productos_mas_vendidos(tipo_tiempo='mensual'):
     """Retorna los productos más vendidos en un periodo."""

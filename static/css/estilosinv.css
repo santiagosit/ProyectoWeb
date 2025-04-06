@@ -1,34 +1,44 @@
 /* Variables globales */
 :root {
-    /* Paleta principal */
-    --primary-color: #2c3e50;      /* Azul oscuro profesional */
-    --secondary-color: #34495e;    /* Azul grisáceo */
-    --accent-color: #3498db;       /* Azul claro para acentos */
+    /* Paleta principal - Colores más modernos y vibrantes */
+    --primary-color: #1a237e;      /* Azul oscuro más profundo */
+    --secondary-color: #283593;    /* Azul medio elegante */
+    --accent-color: #2196f3;       /* Azul brillante para acentos */
     
-    /* Gradientes y fondos */
-    --background-start: #ecf0f1;   /* Gris muy claro */
-    --background-end: #bdc3c7;     /* Gris claro */
-    --background-overlay: rgba(44, 62, 80, 0.97); /* Basado en primary-color */
+    /* Gradientes y fondos - Más suaves y profesionales */
+    --background-start: #f5f6fa;   /* Gris azulado muy claro */
+    --background-end: #e8eaf6;     /* Gris azulado claro */
+    --background-overlay: rgba(26, 35, 126, 0.97); /* Basado en primary-color */
     
-    /* Colores de texto */
-    --text-color: #2c3e50;         /* Para texto principal */
-    --text-light: #ffffff;         /* Para texto sobre fondos oscuros */
-    --text-muted: #7f8c8d;        /* Para texto secundario */
+    /* Colores de texto - Mayor contraste y legibilidad */
+    --text-color: #1a237e;         /* Texto principal más oscuro */
+    --text-light: #ffffff;         /* Blanco puro para contraste */
+    --text-muted: #757575;         /* Gris más neutro */
     
-    /* Colores de utilidad */
-    --border-color: rgba(189, 195, 199, 0.2);
-    --shadow-color: rgba(44, 62, 80, 0.1);
-    --success-color: #27ae60;      /* Verde para éxito */
-    --warning-color: #f39c12;      /* Naranja para advertencias */
-    --danger-color: #e74c3c;       /* Rojo para errores */
+    /* Colores de utilidad - Más vibrantes y claros */
+    --border-color: rgba(63, 81, 181, 0.15);
+    --shadow-color: rgba(26, 35, 126, 0.08);
+    --success-color: #00c853;      /* Verde más brillante */
+    --warning-color: #ffa000;      /* Naranja más vibrante */
+    --danger-color: #d50000;       /* Rojo más intenso */
+    
+    /* Nuevas variables para tarjetas */
+    --card-background: #ffffff;
+    --card-shadow: 0 4px 20px rgba(26, 35, 126, 0.1);
+    --card-hover-shadow: 0 8px 30px rgba(26, 35, 126, 0.15);
+    --card-border-radius: 12px;
+    --card-padding: 1.5rem;
+    --transition-speed: 0.3s;
 }
 
-/* Reset y estilos base */
+/* Reset y estilos base modernos */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -39,19 +49,26 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    line-height: 1.6;
+    font-size: 16px;
 }
 
-/* Layout principal */
+/* Layout principal moderno */
 .wrapper {
     max-width: 1200px;
     width: 95%;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 1rem auto;
-    box-shadow: 0 2px 15px var(--shadow-color);
+    background: var(--card-background);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    margin: 1.5rem auto;
+    box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
-    padding: 20px;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-hover-shadow);
 }
 
 header.wrapper {
@@ -196,32 +213,44 @@ nav ul li a:hover {
     border-radius: 5px;
 }
 
-/* Tablas */
+/* Tablas modernas */
 .table-wrapper {
     overflow-x: auto;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    background: var(--card-background);
+    margin: 1rem 0;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
 }
 
 th, td {
-    padding: 15px;
+    padding: 1rem;
     text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
 
 th {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--background-start);
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
 }
 
-tr:nth-child(odd) {
-    background: rgba(255, 255, 255, 0.1);
+tr:last-child td {
+    border-bottom: none;
 }
 
-tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.2);
+tr:hover {
+    background-color: var(--background-start);
+    transition: background-color var(--transition-speed);
 }
 
 /* Estilos del header */
@@ -254,12 +283,99 @@ nav ul li a:hover {
   background: #005bb5;
 }
 
+/* Estilos para tarjetas de predicción y estadísticas */
+.prediction-card, .stats-card {
+  background: var(--card-background);
+  border-radius: var(--card-border-radius);
+  padding: 2rem;
+  margin: 1.5rem;
+  box-shadow: var(--card-shadow);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  border: 1px solid var(--border-color);
+  min-width: 320px;
+  max-width: 600px;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1.5rem;
+}
+
+.prediction-card:hover, .stats-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-hover-shadow);
+}
+
+.card-header {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent-color);
+  text-align: center;
+}
+
+.card-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.stat-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--background-start);
+  border-radius: 8px;
+  align-items: center;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.trend-indicator {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.trend-high {
+  background-color: rgba(0, 200, 83, 0.1);
+  color: var(--success-color);
+}
+
+.trend-medium {
+  background-color: rgba(255, 160, 0, 0.1);
+  color: var(--warning-color);
+}
+
+.trend-low {
+  background-color: rgba(213, 0, 0, 0.1);
+  color: var(--danger-color);
+}
+
 /* Estilos para formularios */
 form {
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* Cambiado para que los inputs ocupen el ancho completo */
-  margin-top: 10px; /* Espaciado entre el formulario y otros elementos */
+  align-items: stretch;
+  margin-top: 1rem;
+  background: var(--card-background);
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
 }
 
 form label {

@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'app_ventas',
     'app_administracion',
     'app_eventos',
+    'app_predicciones',
     'django_ses',
 ]
 

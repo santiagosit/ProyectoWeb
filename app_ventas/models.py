@@ -46,11 +46,12 @@ class Venta(models.Model):
             # Crear ingreso solo si no existe
             from app_finanzas.models import Ingreso
             if not hasattr(self, 'ingreso'):
+                # Asegurarse de que el total esté actualizado antes de crear el ingreso
+                total_actualizado = sum(detalle.precio_total for detalle in self.detalles.all())
                 Ingreso.objects.create(
                     venta=self,
-                    monto=self.total,
-                    subtotal=self.total,
-                    iva=Decimal('0.00'),
+                    monto=total_actualizado,
+                    tipo='venta',
                     descripcion=f'Ingreso por venta #{self.id}'
                 )
 

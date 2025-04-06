@@ -48,9 +48,8 @@ class PedidoDetalle(models.Model):
 
     def actualizar_stock(self):
         """Actualiza el stock del producto cuando el pedido se marca como recibido"""
-        if self.pedido.estado == 'recibido':
-            self.producto.cantidad_stock += self.cantidad
-            self.producto.save()
+        self.producto.cantidad_stock += self.cantidad
+        self.producto.save()
 
     def __str__(self):
         return f"{self.producto.nombre} - {self.cantidad} unidades"

@@ -116,6 +116,16 @@
                                 <li><a class="dropdown-item" href="{% url 'crear_evento' %}">Crear Evento</a></li>
                             </ul>
                         </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                Predicciones
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'predicciones:predicciones_list' %}">Generar Predicciones</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:estadisticas_list' %}">Ver Estadísticas</a></li>
+                            </ul>
+                        </li>
                         {% endif %}
                     </ul>
                     
