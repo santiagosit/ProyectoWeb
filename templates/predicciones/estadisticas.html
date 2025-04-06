@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas de Predicciones{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="details-header">
+        <h2>Estadísticas de Predicciones</h2>
+    </div>
+    
+    <div class="details-content">
+        <!-- Resumen de estadísticas -->
+        <div class="details-section">
+            <h3>Resumen General</h3>
+            
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line icon-primary"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Predicciones</div>
+                        <div class="stat-value">{{ total_predicciones }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-item success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle icon-success"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Predicciones Exitosas</div>
+                        <div class="stat-value">{{ predicciones_exitosas }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-item warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle icon-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Predicciones Pendientes</div>
+                        <div class="stat-value">{{ predicciones_pendientes }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Productos con Alta Rotación -->
+        <div class="details-section">
+            <h3>Productos con Alta Rotación</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Rotación</th>
+                            <th>Stock</th>
+                            <th>Ventas 30d</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in productos_alta_rotacion %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}">
+                                    {{ prediccion.producto.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ prediccion.rotacion_mensual|floatformat:2 }}</td>
+                            <td>{{ prediccion.producto.cantidad_stock }}</td>
+                            <td>{{ prediccion.ventas_ultimos_30_dias }}</td>
+                            <td>
+                                <a href="{% url 'predicciones:tendencias_producto' prediccion.producto.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay productos con alta rotación actualmente.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Productos con Baja Rotación -->
+        <div class="details-section">
+            <h3>Productos con Baja Rotación</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Rotación</th>
+                            <th>Stock</th>
+                            <th>Días Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in productos_baja_rotacion %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}">
+                                    {{ prediccion.producto.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ prediccion.rotacion_mensual|floatformat:2 }}</td>
+                            <td>{{ prediccion.producto.cantidad_stock }}</td>
+                            <td>{{ prediccion.dias_stock_actual }}</td>
+                            <td>
+                                <a href="{% url 'predicciones:tendencias_producto' prediccion.producto.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay productos con baja rotación actualmente.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Productos con Mejor Margen -->
+        <div class="details-section">
+            <h3>Productos con Mejor Margen</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Margen</th>
+                            <th>Precio</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in productos_mejor_margen %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}">
+                                    {{ prediccion.producto.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ prediccion.margen_actual|floatformat:2 }}%</td>
+                            <td>${{ prediccion.producto.precio|floatformat:2 }}</td>
+                            <td>${{ prediccion.producto.costo|floatformat:2 }}</td>
+                            <td>
+                                <a href="{% url 'predicciones:tendencias_producto' prediccion.producto.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay datos disponibles.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

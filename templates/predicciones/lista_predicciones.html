@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Listado de Predicciones{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="details-header">
+        <h2>Listado de Predicciones</h2>
+        <div class="details-actions">
+            <a href="{% url 'predicciones:generar_predicciones' %}" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i> Generar Nuevas Predicciones
+            </a>
+        </div>
+    </div>
+    
+    <div class="details-content">
+        <!-- Filtros -->
+        <div class="details-section">
+            <h3>Filtros</h3>
+            
+            <form method="get" class="filter-form">
+                <div class="filter-grid">
+                    <div class="filter-item">
+                        <label for="tipo" class="form-label">Tipo de Predicción</label>
+                        <select name="tipo" id="tipo" class="form-select">
+                            <option value="">Todos</option>
+                            {% for key, value in tipos_prediccion.items %}
+                                <option value="{{ key }}" {% if filtros.tipo == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="prioridad" class="form-label">Prioridad</label>
+                        <select name="prioridad" id="prioridad" class="form-select">
+                            <option value="">Todas</option>
+                            {% for key, value in prioridades.items %}
+                                <option value="{{ key }}" {% if filtros.prioridad == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="producto" class="form-label">Producto</label>
+                        <select name="producto" id="producto" class="form-select">
+                            <option value="">Todos</option>
+                            {% for producto in productos %}
+                                <option value="{{ producto.id }}" {% if filtros.producto == producto.id|stringformat:"s" %}selected{% endif %}>{{ producto.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item filter-button">
+                        <button type="submit" class="btn btn-primary">Filtrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Listado de predicciones -->
+        <div class="details-section">
+            <h3>Predicciones</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Rotación</th>
+                            <th>Margen</th>
+                            <th>Días Stock</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in page_obj %}
+                        <tr>
+                            <td>{{ prediccion.producto.nombre }}</td>
+                            <td>
+                                {% if prediccion.tipo_prediccion == 'venta' %}
+                                    <span class="badge bg-success">Venta</span>
+                                {% elif prediccion.tipo_prediccion == 'compra' %}
+                                    <span class="badge bg-primary">Compra</span>
+                                {% elif prediccion.tipo_prediccion == 'precio' %}
+                                    <span class="badge bg-warning">Precio</span>
+                                {% else %}
+                                    <span class="badge bg-info">Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if prediccion.prioridad == 'alta' %}
+                                    <span class="badge bg-danger">Alta</span>
+                                {% elif prediccion.prioridad == 'media' %}
+                                    <span class="badge bg-warning">Media</span>
+                                {% else %}
+                                    <span class="badge bg-info">Baja</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ prediccion.rotacion_mensual|floatformat:2 }}</td>
+                            <td>{{ prediccion.margen_actual|floatformat:2 }}%</td>
+                            <td>{{ prediccion.dias_stock_actual }}</td>
+                            <td>{{ prediccion.fecha_generacion|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'predicciones:tendencias_producto' prediccion.producto.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                    <a href="{% url 'predicciones:evaluar_prediccion' prediccion.id %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-star"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No hay predicciones que coincidan con los filtros.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-container">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">&laquo; Primera</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">Siguiente</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in filtros.items %}&{{ key }}={{ value }}{% endfor %}">Última &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

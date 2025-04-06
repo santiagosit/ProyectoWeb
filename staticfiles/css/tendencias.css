@@ -1,0 +1,72 @@
+.tendencias-legend {
+    margin-top: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tendencias-legend .card-header {
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    padding: 1rem;
+    border-bottom: none;
+}
+
+.tendencias-legend .card-header h5 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tendencias-legend .card-body {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.tendencia-item {
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+}
+
+.tendencia-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tendencia-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.tendencia-item-alta {
+    background: linear-gradient(45deg, #28a745, #34c759);
+    color: white;
+}
+
+.tendencia-item-media {
+    background: linear-gradient(45deg, #17a2b8, #32ced8);
+    color: white;
+}
+
+.tendencia-item-baja {
+    background: linear-gradient(45deg, #ffc107, #ffcd38);
+    color: #2c3e50;
+}
+
+.tendencia-item-riesgo {
+    background: linear-gradient(45deg, #dc3545, #ff4d5d);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .tendencia-col {
+        margin-bottom: 1rem;
+    }
+    
+    .tendencia-item {
+        margin-bottom: 0.75rem;
+    }
+}

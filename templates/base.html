@@ -122,8 +122,15 @@
                                 Predicciones
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'predicciones:predicciones_list' %}">Generar Predicciones</a></li>
+                                
                                 <li><a class="dropdown-item" href="{% url 'predicciones:estadisticas_list' %}">Ver Estadísticas</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:dashboard_predicciones' %}">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:lista_predicciones' %}">Listar Predicciones</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:generar_predicciones' %}">Generar Predicciones</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:productos_alta_rotacion' %}">Productos Alta Rotación</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:productos_baja_rotacion' %}">Productos Baja Rotación</a></li>
+                                <li><a class="dropdown-item" href="{% url 'predicciones:reporte_oportunidades' %}">Oportunidades de Negocio</a></li>
                             </ul>
                         </li>
                         {% endif %}

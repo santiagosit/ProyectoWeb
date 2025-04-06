@@ -61,52 +61,80 @@ def logout_view(request):
 
 @login_required
 def home(request):
-    # Quitar el espacio extra después de 'Empleado'
-    if request.user.profile.rol == 'Empleado':
+    """Dashboard principal para administradores"""
+    # Verificar que sea administrador o superusuario
+    if not hasattr(request.user, 'profile') or (request.user.profile.rol != 'Administrador' and not request.user.is_superuser):
         return redirect('empleado_dashboard')
+    
+    # Obtener fecha actual y rangos de tiempo
     today = timezone.now()
-    start_of_month = today.replace(day=1)
-
-    # Estadísticas financieras
-    ingresos_hoy = Ingreso.objects.filter(fecha__date=today.date()).aggregate(total=Sum('monto'))['total'] or 0
-    egresos_hoy = Egreso.objects.filter(fecha__date=today.date()).aggregate(total=Sum('monto'))['total'] or 0
-    ingresos_mes = Ingreso.objects.filter(fecha__gte=start_of_month).aggregate(total=Sum('monto'))['total'] or 0
-    egresos_mes = Egreso.objects.filter(fecha__gte=start_of_month).aggregate(total=Sum('monto'))['total'] or 0
-    balance_mes = ingresos_mes - egresos_mes
-
-    # Ventas
-    ventas_hoy = Venta.objects.filter(fecha_creacion__date=today.date()).count()
-    ultimas_ventas = Venta.objects.all().order_by('-fecha_creacion')[:5]
-
-    # Eventos
-    eventos_pendientes_count = Evento.objects.filter(estado='Pendiente').count()
-    eventos_proximos = Evento.objects.filter(fecha_evento__gte=today).order_by('fecha_evento')[:5]
-
-    # Inventario
-    productos_sin_stock_count = Producto.objects.filter(stock=0).count()
-    productos_bajo_stock_count = Producto.objects.filter(stock__lte=10, stock__gt=0).count()
-    productos_stock_normal_count = Producto.objects.filter(stock__gt=10).count()
-
-    # Pedidos
-    pedidos_pendientes = Pedido.objects.filter(estado='Pendiente').order_by('-fecha_pedido')[:5]
-
+    start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Estadísticas de ventas - Usar filter con estado='completada' o 'Completada' según tu modelo
+    ventas_hoy = Venta.objects.filter(
+        fecha_creacion__date=today.date(),
+        estado__in=['completada', 'Completada']
+    )
+    
+    ventas_mes = Venta.objects.filter(
+        fecha_creacion__gte=start_of_month,
+        estado__in=['completada', 'Completada']
+    )
+    
+    # Estadísticas de ingresos y egresos
+    ingresos_mes = Ingreso.objects.filter(fecha__gte=start_of_month)
+    egresos_mes = Egreso.objects.filter(fecha__gte=start_of_month)
+    
+    # Productos con stock bajo - Asegurarse de que la comparación sea correcta
+    productos_stock_bajo = Producto.objects.filter(cantidad_stock__lt=models.F('stock_minimo'))
+    
+    # Pedidos pendientes - Verificar el valor exacto del estado
+    pedidos_pendientes = Pedido.objects.filter(estado='pedido')
+    
+    # Eventos próximos - Asegurarse de que el filtro sea correcto
+    eventos_proximos = Evento.objects.filter(
+        fecha_evento__gte=today,
+        estado='Confirmado'
+    ).order_by('fecha_evento')[:5]
+    
+    # Productos más vendidos del mes - Corregir la consulta
+    productos_mas_vendidos = VentaDetalle.objects.filter(
+        venta__fecha_creacion__gte=start_of_month,
+        venta__estado__in=['completada', 'Completada']
+    ).values('producto__nombre').annotate(
+        total_vendido=Sum('cantidad')
+    ).order_by('-total_vendido')[:5]
+    
+    # Calcular totales
+    total_ventas_hoy = ventas_hoy.aggregate(total=Sum('total'))['total'] or Decimal('0')
+    total_ventas_mes = ventas_mes.aggregate(total=Sum('total'))['total'] or Decimal('0')
+    total_ingresos_mes = ingresos_mes.aggregate(total=Sum('monto'))['total'] or Decimal('0')
+    total_egresos_mes = egresos_mes.aggregate(total=Sum('monto'))['total'] or Decimal('0')
+    
+    # Imprimir información de depuración
+    print(f"Productos con stock bajo: {productos_stock_bajo.count()}")
+    print(f"Pedidos pendientes: {pedidos_pendientes.count()}")
+    print(f"Eventos próximos: {eventos_proximos.count()}")
+    print(f"Productos más vendidos: {len(productos_mas_vendidos)}")
+    
     context = {
         'today': today,
-        'ingresos_hoy': ingresos_hoy,
-        'egresos_hoy': egresos_hoy,
-        'ingresos_mes': ingresos_mes,
-        'egresos_mes': egresos_mes,
-        'balance_mes': balance_mes,
-        'ventas_hoy': ventas_hoy,
-        'ultimas_ventas': ultimas_ventas,
-        'eventos_pendientes_count': eventos_pendientes_count,
-        'eventos_proximos': eventos_proximos,
-        'productos_sin_stock_count': productos_sin_stock_count,
-        'productos_bajo_stock_count': productos_bajo_stock_count,
-        'productos_stock_normal_count': productos_stock_normal_count,
+        'total_ventas_hoy': total_ventas_hoy,
+        'total_ventas_mes': total_ventas_mes,
+        'cantidad_ventas_hoy': ventas_hoy.count(),
+        'cantidad_ventas_mes': ventas_mes.count(),
+        'total_ingresos_mes': total_ingresos_mes,
+        'total_egresos_mes': total_egresos_mes,
+        'balance_mes': total_ingresos_mes - total_egresos_mes,
+        'productos_stock_bajo': productos_stock_bajo,
+        'cantidad_productos_stock_bajo': productos_stock_bajo.count(),
         'pedidos_pendientes': pedidos_pendientes,
+        'cantidad_pedidos_pendientes': pedidos_pendientes.count(),
+        'eventos_proximos': eventos_proximos,
+        'productos_mas_vendidos': productos_mas_vendidos,
     }
-
+    
     return render(request, 'home.html', context)
 
 @login_required

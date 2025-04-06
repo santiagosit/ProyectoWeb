@@ -4,245 +4,194 @@
 {% block title %}Dashboard de Predicciones{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Dashboard de Predicciones</h1>
-    
-    <div class="row">
-        <!-- Tarjeta de Oportunidades de Compra -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Oportunidades de Compra</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% with compra_count=predicciones_por_tipo|dictsort:"tipo_prediccion"|first %}
-                                {{ compra_count.count|default:"0" }}
-                                {% endwith %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta de Oportunidades de Venta -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Oportunidades de Venta</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% for tipo in predicciones_por_tipo %}
-                                    {% if tipo.tipo_prediccion == 'venta' %}
-                                        {{ tipo.count }}
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta de Ajustes de Precio -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Ajustes de Precio</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% for tipo in predicciones_por_tipo %}
-                                    {% if tipo.tipo_prediccion == 'precio' %}
-                                        {{ tipo.count }}
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-tags fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta de Optimización de Stock -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Optimización de Stock</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% for tipo in predicciones_por_tipo %}
-                                    {% if tipo.tipo_prediccion == 'stock' %}
-                                        {{ tipo.count }}
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Oportunidades de Compra Alta Prioridad -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Oportunidades de Compra (Alta Prioridad)</h6>
-                </div>
-                <div class="card-body">
-                    {% if oportunidades_compra %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Stock</th>
-                                        <th>Cantidad</th>
-                                        <th>Inversión</th>
-                                        <th>ROI Est.</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for prediccion in oportunidades_compra %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'detalle_prediccion' prediccion.id %}">
-                                                {{ prediccion.producto.nombre }}
-                                            </a>
-                                        </td>
-                                        <td>{{ prediccion.producto.cantidad_stock }}</td>
-                                        <td>{{ prediccion.cantidad_recomendada }}</td>
-                                        <td>${{ prediccion.inversion_estimada|floatformat:2 }}</td>
-                                        <td>{{ prediccion.roi_estimado|floatformat:2 }}%</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        <a href="{% url 'lista_predicciones' %}?tipo=compra&prioridad=alta" class="btn btn-primary btn-sm">
-                            Ver todas
-                        </a>
-                    {% else %}
-                        <p class="text-center">No hay oportunidades de compra de alta prioridad actualmente.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Oportunidades de Venta -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-success">Oportunidades de Venta</h6>
-                </div>
-                <div class="card-body">
-                    {% if oportunidades_venta %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Rotación</th>
-                                        <th>Margen</th>
-                                        <th>Stock</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for prediccion in oportunidades_venta %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'detalle_prediccion' prediccion.id %}">
-                                                {{ prediccion.producto.nombre }}
-                                            </a>
-                                        </td>
-                                        <td>{{ prediccion.rotacion_mensual|floatformat:2 }}</td>
-                                        <td>{{ prediccion.margen_actual|floatformat:2 }}%</td>
-                                        <td>{{ prediccion.producto.cantidad_stock }}</td>
-                                        <td>
-                                            <a href="{% url 'tendencias_producto' prediccion.producto.id %}" class="btn btn-sm btn-outline-success">
-                                                Análisis
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        <a href="{% url 'lista_predicciones' %}?tipo=venta" class="btn btn-success btn-sm">
-                            Ver todas
-                        </a>
-                    {% else %}
-                        <p class="text-center">No hay oportunidades de venta actualmente.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+<div class="wrapper">
+    <div class="details-header">
+        <h2>Dashboard de Predicciones de Negocio</h2>
     </div>
     
-    <div class="row">
-        <!-- Botones de acciones -->
-        <div class="col-12 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+    <div class="details-content">
+        <!-- Resumen de estadísticas -->
+        <div class="details-section">
+            <h3 class="mb-4">Resumen General</h3>
+            
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line icon-primary"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Predicciones</div>
+                        <div class="stat-value">{{ total_predicciones }}</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <a href="{% url 'generar_predicciones' %}" class="btn btn-primary">
-                        <i class="fas fa-sync"></i> Generar Nuevas Predicciones
-                    </a>
-                    <a href="{% url 'reporte_oportunidades' %}" class="btn btn-success">
-                        <i class="fas fa-file-alt"></i> Generar Reporte
-                    </a>
+                
+                <div class="stat-item success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle icon-success"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Predicciones Exitosas</div>
+                        <div class="stat-value">{{ predicciones_exitosas }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-item warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle icon-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Predicciones Pendientes</div>
+                        <div class="stat-value">{{ predicciones_pendientes }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-item danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle icon-danger"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Predicciones No Exitosas</div>
+                        <div class="stat-value">{{ predicciones_no_exitosas }}</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    {% if fecha_actualizacion %}
-    <div class="row">
-        <div class="col-12">
-            <p class="text-muted small">
-                Última actualización: {{ fecha_actualizacion|date:"d/m/Y H:i" }}
-            </p>
+        
+        <!-- Gráficos -->
+        <div class="details-section">
+            <h3 class="mb-4">Análisis de Predicciones</h3>
+            
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <h4 class="text-center mb-3">Predicciones por Tipo</h4>
+                    <canvas id="tipoChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h4 class="text-center mb-3">Predicciones por Prioridad</h4>
+                    <canvas id="prioridadChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Últimas predicciones -->
+        <div class="details-section">
+            <h3 class="mb-4">Últimas Predicciones</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in ultimas_predicciones %}
+                        <tr>
+                            <td>{{ prediccion.producto.nombre }}</td>
+                            <td>{{ prediccion.tipo_prediccion }}</td>
+                            <td>
+                                {% if prediccion.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                                {% elif prediccion.prioridad == 'media' %}
+                                <span class="badge badge-warning">Media</span>
+                                {% else %}
+                                <span class="badge badge-success">Baja</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ prediccion.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if prediccion.estado == 'pendiente' %}
+                                <span class="badge badge-warning">Pendiente</span>
+                                {% elif prediccion.estado == 'exitosa' %}
+                                <span class="badge badge-success">Exitosa</span>
+                                {% else %}
+                                <span class="badge badge-danger">No exitosa</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'predicciones:evaluar_prediccion' prediccion.id %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay predicciones registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="details-actions">
+                <a href="{% url 'predicciones:lista_predicciones' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> Ver todas las predicciones
+                </a>
+                <a href="{% url 'predicciones:generar_predicciones' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Generar nuevas predicciones
+                </a>
+            </div>
+        </div>
+        
+        <!-- Oportunidades de negocio -->
+        <div class="details-section">
+            <h3 class="mb-4">Oportunidades de Negocio</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Potencial</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for oportunidad in oportunidades_negocio %}
+                        <tr>
+                            <td>{{ oportunidad.producto.nombre }}</td>
+                            <td>{{ oportunidad.producto.categoria }}</td>
+                            <td>
+                                <div class="trend-indicator trend-high">Alto potencial</div>
+                            </td>
+                            <td>
+                                <a href="{% url 'predicciones:tendencias_producto' oportunidad.producto.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i> Ver tendencias
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No hay oportunidades de negocio identificadas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="details-actions">
+                <a href="{% url 'predicciones:reporte_oportunidades' %}" class="btn btn-primary">
+                    <i class="fas fa-file-alt"></i> Ver reporte completo
+                </a>
+            </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Código JavaScript para gráficas (se implementaría con datos de la API)
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('{% url "datos_predicciones_api" %}')
-            .then(response => response.json())
-            .then(data => {
-                // Implementación de gráficas con Chart.js
-                console.log(data);
-            });
-    });
-</script>
+<script src="{% static 'js/predicciones_dashboard.js' %}"></script>
 {% endblock %}

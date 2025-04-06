@@ -10,6 +10,8 @@ from app_inventario.models import Producto
 from app_ventas.models import Venta, VentaDetalle
 from app_pedidos.models import Pedido, PedidoDetalle
 from .models import PrediccionNegocio, HistorialPrediccion, PrediccionVenta, EstadisticaVenta
+import json
+from django.utils.safestring import mark_safe
 
 @login_required
 def dashboard_predicciones(request):
@@ -84,7 +86,7 @@ def lista_predicciones(request):
         }
     }
     
-    return render(request, 'app_predicciones/lista_predicciones.html', context)
+    return render(request, 'predicciones/lista_predicciones.html', context)
 
 @login_required
 def detalle_prediccion(request, prediccion_id):
@@ -116,7 +118,7 @@ def detalle_prediccion(request, prediccion_id):
         'producto': prediccion.producto
     }
     
-    return render(request, 'app_predicciones/detalle_prediccion.html', context)
+    return render(request, 'predicciones/detalle_prediccion.html', context)
 
 @login_required
 def generar_predicciones(request):
@@ -141,7 +143,7 @@ def generar_predicciones(request):
             contador += 1
         
         messages.success(request, f"Se han generado {contador} predicciones de negocio.")
-        return redirect('lista_predicciones')
+        return redirect('predicciones:lista_predicciones')
     
     # Si es GET, mostrar formulario para seleccionar productos
     productos = Producto.objects.all().order_by('nombre')
@@ -149,7 +151,7 @@ def generar_predicciones(request):
         'productos': productos
     }
     
-    return render(request, 'app_predicciones/generar_predicciones.html', context)
+    return render(request, 'predicciones/generar_predicciones.html', context)
 
 @login_required
 def evaluar_prediccion(request, prediccion_id):
@@ -168,109 +170,173 @@ def evaluar_prediccion(request, prediccion_id):
         )
         
         messages.success(request, "La evaluación de la predicción ha sido registrada.")
-        return redirect('detalle_prediccion', prediccion_id=prediccion_id)
+        return redirect('predicciones:detalle_prediccion', prediccion_id=prediccion_id)
     
     context = {
         'prediccion': prediccion
     }
     
-    return render(request, 'app_predicciones/evaluar_prediccion.html', context)
+    return render(request, 'predicciones/evaluar_prediccion.html', context)
 
 @login_required
 def productos_baja_rotacion(request):
     """Vista para mostrar productos con baja rotación"""
-    productos_baja_rotacion = PrediccionNegocio.objects.filter(
-        tipo_prediccion='precio',
-        rotacion_mensual__lt=0.5
+    productos = PrediccionNegocio.objects.filter(
+        rotacion_mensual__lt=0.5,
+        producto__cantidad_stock__gt=0
     ).select_related('producto').order_by('rotacion_mensual')
     
     context = {
-        'productos': productos_baja_rotacion
+        'productos': productos,
+        'titulo': 'Productos con Baja Rotación'
     }
     
-    return render(request, 'app_predicciones/productos_baja_rotacion.html', context)
+    return render(request, 'predicciones/reporte_productos.html', context)
 
 @login_required
 def productos_alta_rotacion(request):
     """Vista para mostrar productos con alta rotación"""
-    productos_alta_rotacion = PrediccionNegocio.objects.filter(
-        tipo_prediccion='venta',
-        rotacion_mensual__gt=2.0
+    productos = PrediccionNegocio.objects.filter(
+        rotacion_mensual__gt=1.0
     ).select_related('producto').order_by('-rotacion_mensual')
     
     context = {
-        'productos': productos_alta_rotacion
+        'productos': productos,
+        'titulo': 'Productos con Alta Rotación'
     }
     
-    return render(request, 'app_predicciones/productos_alta_rotacion.html', context)
+    return render(request, 'predicciones/reporte_productos.html', context)
 
 @login_required
 def reporte_oportunidades(request):
-    """Vista para generar reporte consolidado de oportunidades"""
-    # Calcular valor total de oportunidades
-    oportunidades_compra = PrediccionNegocio.objects.filter(
-        tipo_prediccion='compra',
-        prioridad='alta'
-    ).aggregate(
-        total_inversion=Sum('inversion_estimada'),
-        total_ganancia=Sum('ganancia_estimada'),
-        total_productos=Count('id')
-    )
-    
-    oportunidades_precio = PrediccionNegocio.objects.filter(
-        tipo_prediccion='precio'
-    ).aggregate(
-        total_productos=Count('id')
-    )
+    """Vista para mostrar oportunidades de negocio"""
+    oportunidades = PrediccionNegocio.objects.filter(
+        Q(tipo_prediccion='compra') | Q(tipo_prediccion='venta')
+    ).select_related('producto').order_by('-prioridad', '-fecha_generacion')
     
     context = {
-        'oportunidades_compra': oportunidades_compra,
-        'oportunidades_precio': oportunidades_precio,
-        'fecha_reporte': timezone.now()
+        'oportunidades': oportunidades,
+        'titulo': 'Oportunidades de Negocio'
     }
     
-    return render(request, 'app_predicciones/reporte_oportunidades.html', context)
-
-# API para gráficas en el dashboard
-@login_required
-def datos_predicciones_api(request):
-    """API para obtener datos para gráficas en el dashboard"""
-    # Datos para gráfica de tipos de predicción
-    tipos_prediccion = list(PrediccionNegocio.objects.values('tipo_prediccion').annotate(
-        total=Count('id')
-    ).order_by('tipo_prediccion'))
-    
-    # Datos para gráfica de productos con mayor ROI
-    productos_roi = list(PrediccionNegocio.objects.filter(
-        roi_estimado__isnull=False
-    ).order_by('-roi_estimado').values(
-        'producto__nombre', 'roi_estimado'
-    )[:10])
-    
-    return JsonResponse({
-        'tipos_prediccion': tipos_prediccion,
-        'productos_roi': productos_roi
-    })
+    return render(request, 'predicciones/reporte_oportunidades.html', context)
 
 @login_required
 def tendencias_producto(request, producto_id):
-    """Vista para mostrar tendencias históricas de un producto"""
+    """Vista para mostrar tendencias de un producto específico"""
     producto = get_object_or_404(Producto, id=producto_id)
     
-    # Obtener datos de estadísticas de venta si existen
-    estadisticas = EstadisticaVenta.objects.filter(
-        producto=producto
-    ).order_by('fecha')
+    # Obtener ventas históricas
+    ventas_historicas = VentaDetalle.objects.filter(
+        producto=producto,
+        venta__estado='completada'
+    ).values('venta__fecha_creacion__date').annotate(
+        total_unidades=Sum('cantidad'),
+        total_venta=Sum('precio_total')
+    ).order_by('venta__fecha_creacion__date')
     
     # Obtener predicciones históricas
     predicciones = PrediccionNegocio.objects.filter(
         producto=producto
-    ).order_by('fecha_generacion')
+    ).order_by('-fecha_generacion')
+    
+    # Prepare data for the chart in JSON format
+    ventas_labels = []
+    ventas_unidades = []
+    
+    for venta in ventas_historicas:
+        fecha = venta['venta__fecha_creacion__date']
+        if hasattr(fecha, 'strftime'):
+            ventas_labels.append(fecha.strftime('%d/%m/%Y'))
+        else:
+            ventas_labels.append(str(fecha))
+        ventas_unidades.append(float(venta['total_unidades'] or 0))
+    
+    # If no data, provide defaults
+    if not ventas_labels:
+        ventas_labels = ['Sin datos']
+        ventas_unidades = [0]
+    
+    # Create a JSON object with both arrays
+    ventas_historicas_json = json.dumps({
+        'labels': ventas_labels,
+        'unidades': ventas_unidades
+    })
     
     context = {
         'producto': producto,
-        'estadisticas': estadisticas,
-        'predicciones': predicciones
+        'predicciones': predicciones,
+        'ventas_historicas': ventas_historicas,
+        'ventas_historicas_json': mark_safe(ventas_historicas_json)
     }
     
-    return render(request, 'app_predicciones/tendencias_producto.html', context)
+    return render(request, 'predicciones/tendencias_producto.html', context)
+
+@login_required
+def estadisticas_list(request):
+    """Vista para mostrar estadísticas de predicciones"""
+    # Obtener estadísticas generales
+    total_predicciones = PrediccionNegocio.objects.count()
+    predicciones_por_tipo = PrediccionNegocio.objects.values('tipo_prediccion').annotate(
+        count=Count('id')
+    ).order_by('tipo_prediccion')
+    
+    predicciones_por_prioridad = PrediccionNegocio.objects.values('prioridad').annotate(
+        count=Count('id')
+    ).order_by('prioridad')
+    
+    # Productos con mayor rotación
+    productos_alta_rotacion = PrediccionNegocio.objects.filter(
+        rotacion_mensual__gt=1.0
+    ).select_related('producto').order_by('-rotacion_mensual')[:10]
+    
+    # Productos con baja rotación
+    productos_baja_rotacion = PrediccionNegocio.objects.filter(
+        rotacion_mensual__lt=0.5,
+        producto__cantidad_stock__gt=0
+    ).select_related('producto').order_by('rotacion_mensual')[:10]
+    
+    # Productos con mejor margen
+    productos_mejor_margen = PrediccionNegocio.objects.select_related('producto').order_by('-margen_actual')[:10]
+    
+    context = {
+        'total_predicciones': total_predicciones,
+        'predicciones_por_tipo': predicciones_por_tipo,
+        'predicciones_por_prioridad': predicciones_por_prioridad,
+        'productos_alta_rotacion': productos_alta_rotacion,
+        'productos_baja_rotacion': productos_baja_rotacion,
+        'productos_mejor_margen': productos_mejor_margen,
+    }
+    
+    return render(request, 'predicciones/estadisticas.html', context)
+
+
+@login_required
+def datos_predicciones_api(request):
+    """API para obtener datos de predicciones para gráficos"""
+    # Contar predicciones por tipo
+    predicciones_por_tipo = PrediccionNegocio.objects.values('tipo_prediccion').annotate(
+        count=Count('id')
+    ).order_by('tipo_prediccion')
+    
+    # Contar predicciones por prioridad
+    predicciones_por_prioridad = PrediccionNegocio.objects.values('prioridad').annotate(
+        count=Count('id')
+    ).order_by('prioridad')
+    
+    # Formatear datos para la API
+    datos_tipo = {
+        'labels': [tipo['tipo_prediccion'].title() for tipo in predicciones_por_tipo],
+        'values': [tipo['count'] for tipo in predicciones_por_tipo]
+    }
+    
+    datos_prioridad = {
+        'labels': [prioridad['prioridad'].title() for prioridad in predicciones_por_prioridad],
+        'values': [prioridad['count'] for prioridad in predicciones_por_prioridad]
+    }
+    
+    # Devolver datos en formato JSON
+    return JsonResponse({
+        'tipo': datos_tipo,
+        'prioridad': datos_prioridad
+    })

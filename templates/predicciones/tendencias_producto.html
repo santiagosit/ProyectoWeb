@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tendencias: {{ producto.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="details-header">
+        <h2>Tendencias: {{ producto.nombre }}</h2>
+        <div class="details-actions">
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+    
+    <div class="details-content">
+        <div class="details-grid">
+            <!-- Información del Producto -->
+            <div class="details-section">
+                <h3>Información del Producto</h3>
+                
+                <div class="details-item">
+                    <div class="details-data">
+                        <div class="details-row">
+                            <div class="details-label">Nombre:</div>
+                            <div class="details-value">{{ producto.nombre }}</div>
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="details-label">Categoría:</div>
+                            <div class="details-value">{{ producto.categoria.nombre }}</div>
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="details-label">Precio:</div>
+                            <div class="details-value">${{ producto.precio|floatformat:2 }}</div>
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="details-label">Stock Actual:</div>
+                            <div class="details-value">{{ producto.cantidad_stock }} unidades</div>
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="details-label">Stock Mínimo:</div>
+                            <div class="details-value">{{ producto.stock_minimo }} unidades</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen de Tendencias -->
+            <div class="details-section">
+                <h3>Resumen de Tendencias</h3>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart icon-primary"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Ventas Último Mes</div>
+                            <div class="stat-value">{{ ventas_ultimo_mes }} unidades</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-sync-alt icon-primary"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Rotación Mensual</div>
+                            <div class="stat-value">{{ rotacion_mensual|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign icon-primary"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Margen Actual</div>
+                            <div class="stat-value">{{ margen_actual|floatformat:2 }}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-day icon-primary"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Días de Stock</div>
+                            <div class="stat-value">{{ dias_stock }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos de Tendencias -->
+        <div class="details-section">
+            <h3>Gráficos de Tendencias</h3>
+            
+            <div class="chart-container">
+                <h4>Ventas Mensuales</h4>
+                <canvas id="ventasChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h4>Evolución de Precios</h4>
+                <canvas id="preciosChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h4>Evolución de Stock</h4>
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Predicciones Relacionadas -->
+        <div class="details-section">
+            <h3>Predicciones Relacionadas</h3>
+            
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Fecha</th>
+                            <th>Recomendación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediccion in predicciones %}
+                        <tr>
+                            <td>
+                                {% if prediccion.tipo_prediccion == 'venta' %}
+                                    <span class="badge badge-success">Venta</span>
+                                {% elif prediccion.tipo_prediccion == 'compra' %}
+                                    <span class="badge badge-primary">Compra</span>
+                                {% elif prediccion.tipo_prediccion == 'precio' %}
+                                    <span class="badge badge-warning">Precio</span>
+                                {% else %}
+                                    <span class="badge badge-info">Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if prediccion.prioridad == 'alta' %}
+                                    <span class="badge badge-danger">Alta</span>
+                                {% elif prediccion.prioridad == 'media' %}
+                                    <span class="badge badge-warning">Media</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Baja</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ prediccion.fecha_generacion|date:"d/m/Y" }}</td>
+                            <td>{{ prediccion.recomendacion|truncatechars:50 }}</td>
+                            <td>
+                                <a href="{% url 'predicciones:detalle_prediccion' prediccion.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay predicciones relacionadas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Datos ocultos para los gráficos -->
+<div id="chart-data" 
+     data-ventas-labels="{{ fechas_ventas|safe }}" 
+     data-ventas-datos="{{ datos_ventas|safe }}"
+     data-precios-labels="{{ fechas_precios|safe }}" 
+     data-precios-datos="{{ datos_precios|safe }}"
+     data-stock-labels="{{ fechas_stock|safe }}" 
+     data-stock-datos="{{ datos_stock|safe }}"
+     style="display: none;">
+</div>
+<script src="{% static 'js/tendencias_producto.js' %}"></script>
+{% endblock %}
