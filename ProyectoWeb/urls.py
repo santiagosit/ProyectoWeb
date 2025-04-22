@@ -27,7 +27,7 @@ urlpatterns = [
     path('reportes/', include('app_reportes.urls')),
     path('eventos/', include('app_eventos.urls')),  # Cambiar a una ruta específica
     # Add this to your main urls.py file if it's not already there
-    path('predicciones/', include('app_predicciones.urls', namespace='predicciones')),
+    path('predicciones/', include('app_predicciones.urls')),
     #path('pagos/', include('app_pagos.urls')),
 ]
 

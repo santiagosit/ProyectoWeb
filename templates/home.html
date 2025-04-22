@@ -1,236 +1,186 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - Pola-Control{% endblock %}
+{% block title %}Dashboard - La Cabañita{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <h1 class="mb-4">Dashboard Administrativo</h1>
-    
-    <!-- Tarjetas de resumen -->
-    <div class="row mb-4">
-        <!-- Ventas del día -->
-        <div class="col-xl-3 col-md-6 mb-4">
+
+<div class="container-fluid py-4 contenido-ajustado">
+    <h1 class="mb-4 text-center">Dashboard Administrativo</h1>
+
+    <!-- Sección de tarjetas de resumen -->
+    <div class="row text-center">
+        <!-- Primera fila: 4 columnas -->
+        <div class="col-lg-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Ventas Hoy</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_hoy|floatformat:2 }}</div>
-                            <div class="small text-muted">{{ cantidad_ventas_hoy }} transacciones</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+                    <div class="text-primary font-weight-bold mb-1">VENTAS HOY</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_hoy|floatformat:2 }}</div>
+                    <div class="text-muted">{{ cantidad_ventas_hoy }} transacciones</div>
                 </div>
             </div>
         </div>
 
-        <!-- Ventas del mes -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Ventas Mes</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_mes|floatformat:2 }}</div>
-                            <div class="small text-muted">{{ cantidad_ventas_mes }} transacciones</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+                    <div class="text-success font-weight-bold mb-1">VENTAS TOTALES DEL MES</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_mes|floatformat:2 }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Balance del mes -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Balance Mes</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ balance_mes|floatformat:2 }}</div>
-                            <div class="small text-muted">Ingresos: ${{ total_ingresos_mes|floatformat:2 }} | Egresos: ${{ total_egresos_mes|floatformat:2 }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
+                    <div class="text-info font-weight-bold mb-1">BALANCE MES</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ balance_mes|floatformat:2 }}</div>
+                    <div class="small text-muted">
+                        Ingresos: ${{ total_ingresos_mes|floatformat:2 }} |
+                        Egresos: ${{ total_egresos_mes|floatformat:2 }}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Alertas de inventario -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Alertas Inventario</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cantidad_productos_stock_bajo }}</div>
-                            <div class="small text-muted">Productos con stock bajo</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+                    <div class="text-warning font-weight-bold mb-1">STOCK BAJO</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cantidad_productos_stock_bajo }}</div>
+                    <div class="small text-muted">Productos con stock bajo</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Contenido principal -->
+    <!-- Segunda fila: 2 columnas unificadas -->
     <div class="row">
-        <!-- Columna izquierda -->
-        <div class="col-lg-6">
-            <!-- Productos con stock bajo -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Productos con Stock Bajo</h6>
-                    <a href="{% url 'listar_productos' %}" class="btn btn-sm btn-primary">Ver todos</a>
-                </div>
-                <div class="card-body">
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="card table-card h-100">
+                <div class="table-card-header">Productos con Stock Bajo</div>
+                <div class="table-card-body">
                     {% if productos_stock_bajo %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Stock Actual</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for producto in productos_stock_bajo %}
-                                    <tr>
-                                        <td>{{ producto.nombre }}</td>
-                                        <td>{{ producto.cantidad_stock }}</td>
-                                        <td>{{ producto.stock_minimo }}</td>
-                                        <td>
-                                            <a href="{% url 'crear_pedido' %}" class="btn btn-sm btn-warning">Pedir</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Stock</th>
+                                    <th>Mínimo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_stock_bajo %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>{{ producto.cantidad_stock }}</td>
+                                    <td>{{ producto.stock_minimo }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <p class="text-center">No hay productos con stock bajo.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Pedidos pendientes -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Pedidos Pendientes</h6>
-                    <a href="{% url 'listar_pedidos' %}" class="btn btn-sm btn-primary">Ver todos</a>
-                </div>
-                <div class="card-body">
-                    {% if pedidos_pendientes %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Proveedor</th>
-                                        <th>Fecha</th>
-                                        <th>Total</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for pedido in pedidos_pendientes %}
-                                    <tr>
-                                        <td>{{ pedido.id }}</td>
-                                        <td>{{ pedido.proveedor.nombre }}</td>
-                                        <td>{{ pedido.fecha_pedido }}</td>
-                                        <td>${{ pedido.total|floatformat:2 }}</td>
-                                        <td>
-                                            <a href="{% url 'app_pedidos:detalle_pedido' pedido.id %}" class="btn btn-sm btn-info">Ver</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-center">No hay pedidos pendientes.</p>
+                    <p class="text-center">No hay productos con stock bajo.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Columna derecha -->
-        <div class="col-lg-6">
-            <!-- Productos más vendidos -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Productos Más Vendidos (Mes)</h6>
-                </div>
-                <div class="card-body">
-                    {% if productos_mas_vendidos %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Unidades Vendidas</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for producto in productos_mas_vendidos %}
-                                    <tr>
-                                        <td>{{ producto.producto__nombre }}</td>
-                                        <td>{{ producto.total_vendido }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="card table-card h-100">
+                <div class="table-card-header">Pedidos Pendientes</div>
+                <div class="table-card-body">
+                    {% if pedidos_pendientes %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Proveedor</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos_pendientes %}
+                                <tr>
+                                    <td>{{ pedido.id }}</td>
+                                    <td>{{ pedido.proveedor.nombre }}</td>
+                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
+                                    <td>${{ pedido.total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <p class="text-center">No hay datos de ventas este mes.</p>
+                    <p class="text-center">No hay pedidos pendientes.</p>
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Eventos próximos -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Eventos Próximos</h6>
-                    <a href="{% url 'listar_eventos' %}" class="btn btn-sm btn-primary">Ver todos</a>
-                </div>
-                <div class="card-body">
-                    {% if eventos_proximos %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Descripción</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for evento in eventos_proximos %}
-                                    <tr>
-                                        <td>{{ evento.cliente.nombre }}</td>
-                                        <td>{{ evento.descripcion|truncatechars:30 }}</td>
-                                        <td>{{ evento.fecha_evento|date:"d/m/Y H:i" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+    <!-- Tercera fila: 2 columnas unificadas -->
+    <div class="row">
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="card table-card">
+                <div class="table-card-header">Productos Más Vendidos (Mes)</div>
+                <div class="table-card-body">
+                    {% if productos_mas_vendidos %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_mas_vendidos %}
+                                <tr>
+                                    <td>{{ producto.producto__nombre }}</td>
+                                    <td>{{ producto.total_vendido }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <p class="text-center">No hay eventos próximos.</p>
+                    <p class="text-center">No hay datos de ventas este mes.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="card table-card">
+                <div class="table-card-header">Eventos Próximos</div>
+                <div class="table-card-body">
+                    {% if eventos_proximos %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Descripción</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evento in eventos_proximos %}
+                                <tr>
+                                    <td>{{ evento.cliente.nombre }}</td>
+                                    <td>{{ evento.descripcion|truncatechars:30 }}</td>
+                                    <td>{{ evento.fecha_evento|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No hay eventos próximos.</p>
                     {% endif %}
                 </div>
             </div>
@@ -238,4 +188,3 @@
     </div>
 </div>
 {% endblock %}
-

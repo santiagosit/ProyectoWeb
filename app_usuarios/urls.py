@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import recuperar_password, verificar_pin,enviar_pin
+from .views import home
 
 urlpatterns = [
     # Usuarios

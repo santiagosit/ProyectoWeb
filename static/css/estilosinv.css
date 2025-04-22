@@ -71,6 +71,10 @@ body {
     box-shadow: var(--card-hover-shadow);
 }
 
+header {
+    position: absolute; /* Esto puede causar problemas */
+}
+
 header.wrapper {
     margin-top: 40px;
     margin-bottom: 20px;
@@ -255,11 +259,13 @@ tr:hover {
 
 /* Estilos del header */
 .header {
+  position: fixed;
   background-color: #004080;
   padding: 10px 20px;
   border-radius: 10px;
   margin-bottom: 20px;
-  margin-top: 20px; /* Añadir margen superior al header */
+  margin-top: 10px; /* Añadir margen superior al header */
+  z-index: 1030; /* Asegúrate de que esté por encima del contenido */
 }
 
 nav ul {
@@ -667,7 +673,10 @@ textarea:focus {
 }
 
 .dropdown-menu {
+    z-index: 1050;
+    position: absolute;
     background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
 }
 
@@ -919,7 +928,7 @@ body {
 
 .summary-card p {
     font-size: 1.1rem;
-    color: var(--text-muted);
+    color: var (--text-muted);
 }
 
 /* Media queries para responsividad */
@@ -1972,3 +1981,139 @@ textarea.form-control {
     }
 }
 
+ /* Ajuste del contenido principal */
+.contenido-ajustado {
+    z-index: 1000;
+    margin-top: 70px; /* Ajusta este valor según la altura del header */
+}
+
+.card.table-card {
+    background: var(--card-background);
+    border-radius: var(--card-border-radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: var(--card-shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border: 1px solid var(--border-color);
+    width: 100%; /* Ocupa todo el ancho disponible */
+    height: 100%; /* Ocupa todo el alto disponible */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.table-card-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.table-card-body {
+    flex-grow: 1; /* Permite que el contenido crezca para ocupar el espacio disponible */
+    padding: 1rem;
+}
+
+.table-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-hover-shadow);
+}
+
+/* Tarjetas de resumen */
+.resumen-card {
+    flex: 1 1 calc(25% - 1rem); /* Ocupa el 25% del ancho con un margen */
+    margin: 0.5rem;
+    min-width: 200px; /* Ancho mínimo para pantallas pequeñas */
+    max-width: 300px; /* Ancho máximo para pantallas grandes */
+    border-left: 5px solid var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.resumen-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Asegura que las tarjetas ocupen todo el espacio disponible */
+.card.table-card {
+    width: 100%; /* Ocupa todo el ancho disponible */
+    height: auto; /* Ajusta la altura automáticamente */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0; /* Elimina márgenes adicionales */
+    padding: 1.5rem; /* Mantén el padding interno */
+    box-sizing: border-box; /* Incluye el padding y el borde en el cálculo del ancho total */
+    max-width: none; /* Elimina cualquier restricción de ancho máximo */
+    max-height: none; /* Elimina cualquier restricción de alto máximo */
+}
+
+/* Ajusta las columnas para que no tengan restricciones de tamaño */
+.row > .col-lg-6 {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0; /* Elimina el padding izquierdo de las columnas */
+    padding-right: 0; /* Elimina el padding derecho de las columnas */
+}
+
+/* Encabezado de las tarjetas */
+.table-card-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Cuerpo de las tarjetas */
+.table-card-body {
+    flex-grow: 1; /* Permite que el contenido crezca para ocupar el espacio disponible */
+    padding: 1rem;
+}
+
+/* Ajusta las columnas para que no tengan padding */
+.row > .col-lg-6 {
+    padding-left: 0; /* Elimina el padding izquierdo de las columnas */
+    padding-right: 0; /* Elimina el padding derecho de las columnas */
+}
+
+/* Ajusta el contenedor para que no limite el ancho */
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Encabezado de las tarjetas */
+.table-card-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Cuerpo de las tarjetas */
+.table-card-body {
+    flex-grow: 1; /* Permite que el contenido crezca para ocupar el espacio disponible */
+    padding: 1rem;
+}
+
+.row > .col-lg-6 {
+    padding-left: 0; /* Elimina el padding izquierdo de las columnas */
+    padding-right: 0; /* Elimina el padding derecho de las columnas */
+}
+
+.table-card-body {
+    flex-grow: 1; /* Permite que el contenido crezca para ocupar el espacio disponible */
+    padding: 1rem;
+}
+
+.table-card-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}

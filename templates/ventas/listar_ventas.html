@@ -7,7 +7,7 @@
     <h1>Listado de Ventas</h1>
 
     {% if messages %}
-    <div class="messages">
+    <div class="form-messages">
         {% for message in messages %}
         <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
             {{ message }}

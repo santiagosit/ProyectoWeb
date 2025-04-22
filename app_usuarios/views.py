@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import transaction, IntegrityError  # Add IntegrityError here
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from django.utils import timezone
+from django.utils.timezone import localdate, now
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 from django.contrib import messages
@@ -22,12 +22,13 @@ from decimal import Decimal
 from ProyectoWeb import settings
 from app_finanzas.models import Egreso, Ingreso
 from app_inventario.models import Producto
+from app_inventario.views import get_productos_bajo_stock
 from app_pedidos.models import Pedido
 from app_ventas.models import Venta, VentaDetalle  # Añadir VentaDetalle
 from .forms import UserForm, ProfileForm
 from .models import Profile, PIN
 from .utils import is_admin_or_superuser, is_employee_or_above, employee_required
-from app_eventos.models import Evento
+from datetime import datetime
 
 # Vistas de autenticación
 def login_view(request):
@@ -61,80 +62,71 @@ def logout_view(request):
 
 @login_required
 def home(request):
+    print("Home view accessed")  # Debug log
     """Dashboard principal para administradores"""
     # Verificar que sea administrador o superusuario
     if not hasattr(request.user, 'profile') or (request.user.profile.rol != 'Administrador' and not request.user.is_superuser):
         return redirect('empleado_dashboard')
     
-    # Obtener fecha actual y rangos de tiempo
-    today = timezone.now()
-    start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    
-    # Estadísticas de ventas - Usar filter con estado='completada' o 'Completada' según tu modelo
-    ventas_hoy = Venta.objects.filter(
-        fecha_creacion__date=today.date(),
-        estado__in=['completada', 'Completada']
-    )
-    
-    ventas_mes = Venta.objects.filter(
-        fecha_creacion__gte=start_of_month,
-        estado__in=['completada', 'Completada']
-    )
-    
-    # Estadísticas de ingresos y egresos
-    ingresos_mes = Ingreso.objects.filter(fecha__gte=start_of_month)
-    egresos_mes = Egreso.objects.filter(fecha__gte=start_of_month)
-    
-    # Productos con stock bajo - Asegurarse de que la comparación sea correcta
-    productos_stock_bajo = Producto.objects.filter(cantidad_stock__lt=models.F('stock_minimo'))
-    
-    # Pedidos pendientes - Verificar el valor exacto del estado
-    pedidos_pendientes = Pedido.objects.filter(estado='pedido')
-    
-    # Eventos próximos - Asegurarse de que el filtro sea correcto
-    eventos_proximos = Evento.objects.filter(
-        fecha_evento__gte=today,
-        estado='Confirmado'
-    ).order_by('fecha_evento')[:5]
-    
-    # Productos más vendidos del mes - Corregir la consulta
+
+    #Tarjeta, envia información del total de ventas del dia
+    hoy = localdate()  # Usa la zona horaria activa del proyecto
+    ventas_hoy = Venta.objects.filter(fecha_creacion__date=hoy, estado='Completada')
+
+    total_ventas_hoy = ventas_hoy.aggregate(Sum('total'))['total__sum'] or 0
+    cantidad_ventas_hoy = ventas_hoy.count()
+
+
+    #Tarjeta ventas totatles del mes
+    inicio_mes = datetime(hoy.year, hoy.month, 1)
+
+    # Sumar total de ventas completadas del mes actual
+    total_ventas_mes = Venta.objects.filter(
+        estado='completada',
+        fecha_creacion__gte=inicio_mes
+    ).aggregate(total_mes=Sum('total'))['total_mes'] or 0
+
+
+    #Tarjeta ingresos y egresos del mes
+    # Totales del mes actual
+    total_ingresos_mes = Ingreso.objects.filter(
+        fecha__gte=inicio_mes,
+        fecha__lte=hoy
+    ).aggregate(Sum('monto'))['monto__sum'] or 0
+
+    total_egresos_mes = Egreso.objects.filter(
+        fecha__gte=inicio_mes,
+        fecha__lte=hoy
+    ).aggregate(Sum('monto'))['monto__sum'] or 0
+
+    balance_mes = total_ingresos_mes - total_egresos_mes
+        
+
+    # Tarjeta con productos con bajo stock
+    productos_stock_bajo = Producto.objects.filter(cantidad_stock__lt=F('stock_minimo'))
+
+    # Obtener pedidos con estado "en camino"
+    pedidos_pendientes = Pedido.objects.filter(estado='en camino')
+
+    # Productos más vendidos del mes
     productos_mas_vendidos = VentaDetalle.objects.filter(
-        venta__fecha_creacion__gte=start_of_month,
-        venta__estado__in=['completada', 'Completada']
+        venta__fecha_creacion__gte=inicio_mes,
+        venta__estado='Completada'
     ).values('producto__nombre').annotate(
         total_vendido=Sum('cantidad')
-    ).order_by('-total_vendido')[:5]
-    
-    # Calcular totales
-    total_ventas_hoy = ventas_hoy.aggregate(total=Sum('total'))['total'] or Decimal('0')
-    total_ventas_mes = ventas_mes.aggregate(total=Sum('total'))['total'] or Decimal('0')
-    total_ingresos_mes = ingresos_mes.aggregate(total=Sum('monto'))['total'] or Decimal('0')
-    total_egresos_mes = egresos_mes.aggregate(total=Sum('monto'))['total'] or Decimal('0')
-    
-    # Imprimir información de depuración
-    print(f"Productos con stock bajo: {productos_stock_bajo.count()}")
-    print(f"Pedidos pendientes: {pedidos_pendientes.count()}")
-    print(f"Eventos próximos: {eventos_proximos.count()}")
-    print(f"Productos más vendidos: {len(productos_mas_vendidos)}")
-    
+    ).order_by('-total_vendido')[:5]  # Limitar a los 5 más vendidos    
+
     context = {
-        'today': today,
         'total_ventas_hoy': total_ventas_hoy,
+        'cantidad_ventas_hoy': cantidad_ventas_hoy,
         'total_ventas_mes': total_ventas_mes,
-        'cantidad_ventas_hoy': ventas_hoy.count(),
-        'cantidad_ventas_mes': ventas_mes.count(),
         'total_ingresos_mes': total_ingresos_mes,
         'total_egresos_mes': total_egresos_mes,
-        'balance_mes': total_ingresos_mes - total_egresos_mes,
+        'balance_mes': balance_mes,
         'productos_stock_bajo': productos_stock_bajo,
-        'cantidad_productos_stock_bajo': productos_stock_bajo.count(),
         'pedidos_pendientes': pedidos_pendientes,
-        'cantidad_pedidos_pendientes': pedidos_pendientes.count(),
-        'eventos_proximos': eventos_proximos,
         'productos_mas_vendidos': productos_mas_vendidos,
-    }
-    
+    }   
     return render(request, 'home.html', context)
 
 @login_required
@@ -143,40 +135,59 @@ def empleado_dashboard(request):
     # Verificar que sea empleado
     if not hasattr(request.user, 'profile') or request.user.profile.rol != 'Empleado':
         return redirect('home')
+    
+    # Obtener la fecha actual
+    hoy = localdate()
 
-    today = timezone.now()
-    start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    # Ventas del empleado
+    # Filtrar las ventas realizadas por el empleado en el día actual
     ventas_hoy = Venta.objects.filter(
         empleado=request.user.profile,
-        fecha_creacion__date=today.date()
+        fecha_creacion__date=hoy,
+        estado='Completada'
     )
-    
+
+    # Calcular el total de ventas del día
+    total_ventas_hoy = ventas_hoy.aggregate(Sum('total'))['total__sum'] or 0
+    cantidad_ventas_hoy = ventas_hoy.count()
+
+    # Filtrar las ventas realizadas por el empleado en el mes actual
     ventas_mes = Venta.objects.filter(
         empleado=request.user.profile,
-        fecha_creacion__gte=start_of_month
+        fecha_creacion__year=hoy.year,
+        fecha_creacion__month=hoy.month,
+        estado='Completada'
     )
 
-    # Estadísticas
-    total_ventas_hoy = ventas_hoy.aggregate(
-        total=Sum('total')
-    )['total'] or Decimal('0')
+    # Calcular el total de ventas del mes
+    total_ventas_mes = ventas_mes.aggregate(Sum('total'))['total__sum'] or 0
+    cantidad_ventas_mes = ventas_mes.count()
 
-    total_ventas_mes = ventas_mes.aggregate(
-        total=Sum('total')
-    )['total'] or Decimal('0')
+    # Obtener las últimas 5 ventas realizadas por el empleado
+    ultimas_ventas = Venta.objects.filter(
+        empleado=request.user.profile
+    ).order_by('-fecha_creacion')[:5]
 
+    # Calcular los productos más vendidos por el empleado
+    productos_mas_vendidos = (
+        VentaDetalle.objects.filter(venta__empleado=request.user.profile)
+        .values('producto__nombre')
+        .annotate(total_vendido=Sum('cantidad'))
+        .order_by('-total_vendido')[:5]
+    )
+
+    # Contexto para el template
     context = {
-        'today': today,
         'total_ventas_hoy': total_ventas_hoy,
+        'cantidad_ventas_hoy': cantidad_ventas_hoy,
         'total_ventas_mes': total_ventas_mes,
-        'cantidad_ventas_hoy': ventas_hoy.count(),
-        'cantidad_ventas_mes': ventas_mes.count(),
-        'ultimas_ventas': ventas_hoy.order_by('-fecha_creacion')[:5],
+        'cantidad_ventas_mes': cantidad_ventas_mes,
+        'ultimas_ventas': ultimas_ventas,
+        'productos_mas_vendidos': productos_mas_vendidos,  # Pasar los productos más vendidos al contexto
     }
 
     return render(request, 'usuarios/empleado_dashboard.html', context)
+
+
 
 # Vistas de gestión de administradores
 @login_required
@@ -274,8 +285,8 @@ def editar_administrador(request, admin_id):
             }
             return redirect('confirmar_edicion_admin', admin_id=admin.id)
     else:
-        user_form = UserForm(request.POST, instance=admin.user, edit_mode=True)
-        profile_form = ProfileForm(request.POST, instance=admin)
+        user_form = UserForm(instance=admin.user, edit_mode=True)
+        profile_form = ProfileForm(instance=admin)
     
     return render(request, 'usuarios/Administrador/editar_administrador.html', {
         'user_form': user_form,
@@ -503,8 +514,9 @@ def editar_empleado(request, empleado_id):
                     for error in errors:
                         messages.error(request, f"{field}: {error}")
     else:
-        user_form = UserForm(request.POST, instance=empleado.user, edit_mode=True)
-        profile_form = ProfileForm(request.POST, instance=empleado)
+        # Inicializar los formularios con los datos existentes
+        user_form = UserForm(instance=empleado.user, edit_mode=True)
+        profile_form = ProfileForm(instance=empleado)
     
     return render(request, 'usuarios/Empleado/editar_empleado.html', {
         'user_form': user_form,
