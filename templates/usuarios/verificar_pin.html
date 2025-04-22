@@ -1,55 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'usuarios/base_auth.html' %}
 {% load static %}
-<head>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/estilosreg.css' %}">
-    <meta charset="UTF-8">
-    <title>Verificar PIN</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Verificar PIN</h1>
-        {% if valid_pin %}
-            <form method="post" action="{% url 'verificar_pin' %}">
-                {% csrf_token %}
-                <p>
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="{{ email }}" readonly>
-                </p>
-                <p>
-                    <label for="new_password">Nueva Contraseña:</label>
-                    <input type="password" id="new_password" name="new_password" required>
-                </p>
-                <input type="submit" value="Cambiar Contraseña">
-            </form>
-        {% else %}
-            <form method="post" action="{% url 'verificar_pin' %}">
-                {% csrf_token %}
-                <p>
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </p>
-                <p>
-                    <label for="pin">PIN:</label>
-                    <input type="text" id="pin" name="pin" required>
-                </p>
-                <input type="submit" value="Verificar PIN">
-            </form>
-        {% endif %}
 
-        {% if error %}
-            <div style="color: red; margin-top: 15px;">
-                {{ error|join:"" }}
+{% block title %}Verificar PIN{% endblock %}
+
+{% block auth_content %}
+    <h1>Verificar PIN</h1>
+    {% if valid_pin %}
+        <form method="post" action="{% url 'verificar_pin' %}">
+            {% csrf_token %}
+            <div class="input-box">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ email }}" readonly>
+                <i class='bx bx-envelope'></i>
             </div>
-        {% endif %}
+            <div class="input-box">
+                <label for="new_password">Nueva Contraseña:</label>
+                <input type="password" id="new_password" name="new_password" required>
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+            <button type="submit" class="btn">Cambiar Contraseña</button>
+        </form>
+    {% else %}
+        <form method="post" action="{% url 'verificar_pin' %}">
+            {% csrf_token %}
+            <div class="input-box">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <i class='bx bx-envelope'></i>
+            </div>
+            <div class="input-box">
+                <label for="pin">PIN:</label>
+                <input type="text" id="pin" name="pin" required>
+                <i class='bx bx-pin'></i>
+            </div>
+            <button type="submit" class="btn">Verificar PIN</button>
+        </form>
+    {% endif %}
 
-        {% if success %}
-            <p style="color: green;">{{ success }}</p>
-        {% endif %}
-
-        <div class="login-link">
-            <p><a href="{% url 'login' %}">Regresar a Login</a></p>
+    {% if error %}
+        <div class="error-message">
+            {{ error|join:"" }}
         </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="success-message">{{ success }}</div>
+    {% endif %}
+
+    <div class="back-to-login">
+        <p><a href="{% url 'login' %}">Regresar a Login</a></p>
     </div>
-</body>
-</html>
+{% endblock %}

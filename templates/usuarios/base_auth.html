@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Pola-Control - Autenticación{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/estilos_auth.css' %}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <h1>Pola-Control</h1>
+        </div>
+        <div class="auth-card">
+            {% block auth_content %}{% endblock %}
+        </div>
+        <div class="auth-footer">
+            <p>&copy; 2024 Pola-Control</p>
+        </div>
+    </div>
+</body>
+</html>

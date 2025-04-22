@@ -102,7 +102,7 @@ WSGI_APPLICATION = 'ProyectoWeb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  # MariaDB utiliza el motor MySQL en Django
-        'NAME': 'proyecto_tienda',  # Nombre de la base de datos
+        'NAME': 'sarc$proyecto_tienda',  # Nombre de la base de datos
         'USER': 'root',               # Usuario de MariaDB
         'PASSWORD': '0000',        # Contraseña de MariaDB
         'HOST': 'localhost',                # Dirección del servidor (local o remota)
