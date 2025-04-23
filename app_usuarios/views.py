@@ -25,6 +25,7 @@ from app_inventario.models import Producto
 from app_inventario.views import get_productos_bajo_stock
 from app_pedidos.models import Pedido
 from app_ventas.models import Venta, VentaDetalle  # Añadir VentaDetalle
+from app_eventos.models import Evento
 from .forms import UserForm, ProfileForm
 from .models import Profile, PIN
 from .utils import is_admin_or_superuser, is_employee_or_above, employee_required
@@ -105,8 +106,8 @@ def home(request):
     # Tarjeta con productos con bajo stock
     productos_stock_bajo = Producto.objects.filter(cantidad_stock__lt=F('stock_minimo'))
 
-    # Obtener pedidos con estado "en camino"
-    pedidos_pendientes = Pedido.objects.filter(estado='en camino')
+    # Obtener pedidos con estado "pedido" o "en camino"
+    pedidos_pendientes = Pedido.objects.filter(estado__in=['pedido', 'en camino']).order_by('fecha_pedido')
 
     # Productos más vendidos del mes
     productos_mas_vendidos = VentaDetalle.objects.filter(
@@ -114,7 +115,13 @@ def home(request):
         venta__estado='Completada'
     ).values('producto__nombre').annotate(
         total_vendido=Sum('cantidad')
-    ).order_by('-total_vendido')[:5]  # Limitar a los 5 más vendidos    
+    ).order_by('-total_vendido')[:5]  # Limitar a los 5 más vendidos
+    
+    # Obtener eventos próximos (pendientes o confirmados)
+    eventos_proximos = Evento.objects.filter(
+        estado__in=['Pendiente', 'Confirmado'],
+        fecha_evento__gte=now()
+    ).order_by('fecha_evento')[:5]  # Limitar a los 5 próximos eventos
 
     context = {
         'total_ventas_hoy': total_ventas_hoy,
@@ -126,6 +133,7 @@ def home(request):
         'productos_stock_bajo': productos_stock_bajo,
         'pedidos_pendientes': pedidos_pendientes,
         'productos_mas_vendidos': productos_mas_vendidos,
+        'eventos_proximos': eventos_proximos,
     }   
     return render(request, 'home.html', context)
 

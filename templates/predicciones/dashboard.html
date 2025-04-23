@@ -9,62 +9,369 @@
         <h2>Dashboard de Predicciones de Negocio</h2>
     </div>
 
-    <h3 style="margin-top: 2rem;">Sugerencias para Pedidos Entre Semana (abastecer fin de semana)</h3>
-    <div class="details-content">
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>PRODUCTO</th>
-                    <th>STOCK ACTUAL</th>
-                    <th>STOCK MINIMO</th>
-                    <th>PROMEDIO SEMANAL</th>
-                    <th>CANTIDAD SUGERIDA</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in entre_semana %}
-                <tr>
-                    <td>{{ item.producto }}</td>
-                    <td>{{ item.stock_actual }}</td>
-                    <td>{{ item.stock_minimo }}</td>
-                    <td>{{ item.promedio_semanal }}</td>
-                    <td>{{ item.cantidad_sugerida }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">No hay datos disponibles.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>            
+    <!-- Vista para escritorio (tablas) -->
+    <div class="desktop-view">
+        <div class="prediction-table-section">
+            <h3>Sugerencias para Pedidos Entre Semana (abastecer fin de semana)</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Promedio Semanal</th>
+                            <th>Cantidad Sugerida</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in entre_semana %}
+                        <tr>
+                            <td>{{ item.producto }}</td>
+                            <td class="text-center">{{ item.stock_actual }}</td>
+                            <td class="text-center">{{ item.stock_minimo }}</td>
+                            <td class="text-center">{{ item.promedio_semanal }}</td>
+                            <td class="text-center">{{ item.cantidad_sugerida }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center">No hay datos disponibles.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>            
+            </div>
+        </div>
+
+        <div class="prediction-table-section">
+            <h3>Sugerencias para Pedidos Fin de Semana (abastecer entre semana)</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Promedio Semanal</th>
+                            <th>Cantidad Sugerida</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in fin_de_semana %}
+                        <tr>
+                            <td>{{ item.producto }}</td>
+                            <td class="text-center">{{ item.stock_actual }}</td>
+                            <td class="text-center">{{ item.stock_minimo }}</td>
+                            <td class="text-center">{{ item.promedio_semanal }}</td>
+                            <td class="text-center">{{ item.cantidad_sugerida }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center">No hay datos disponibles.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>            
+            </div>
+        </div>
     </div>
 
-    <h3 style="margin-top: 2rem;">Sugerencias para Pedidos Fin de Semana (abastecer entre semana)</h3>
-    <div class="details-content">
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>PRODUCTO</th>
-                    <th>STOCK ACTUAL</th>
-                    <th>STOCK MINIMO</th>
-                    <th>PROMEDIO SEMANAL</th>
-                    <th>CANTIDAD SUGERIDA</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in fin_de_semana %}
-                <tr>
-                    <td>{{ item.producto }}</td>
-                    <td>{{ item.stock_actual }}</td>
-                    <td>{{ item.stock_minimo }}</td>
-                    <td>{{ item.promedio_semanal }}</td>
-                    <td>{{ item.cantidad_sugerida }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">No hay datos disponibles.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>            
+    <!-- Vista para móvil (cards) -->
+    <div class="mobile-view">
+        <div class="prediction-section">
+            <h3>Sugerencias para Pedidos Entre Semana</h3>
+            <p class="subtitle">Abastecer fin de semana</p>
+            
+            {% for item in entre_semana %}
+            <div class="prediction-card">
+                <h4>{{ item.producto }}</h4>
+                <div class="prediction-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Actual:</span>
+                        <span class="stat-value">{{ item.stock_actual }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Mínimo:</span>
+                        <span class="stat-value">{{ item.stock_minimo }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Promedio Semanal:</span>
+                        <span class="stat-value">{{ item.promedio_semanal }}</span>
+                    </div>
+                </div>
+                <div class="stat-item highlight">
+                    <span class="stat-label">Cantidad Sugerida:</span>
+                    <span class="stat-value">{{ item.cantidad_sugerida }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="prediction-card empty">
+                <p>No hay datos disponibles.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="prediction-section">
+            <h3>Sugerencias para Pedidos Fin de Semana</h3>
+            <p class="subtitle">Abastecer entre semana</p>
+            
+            {% for item in fin_de_semana %}
+            <div class="prediction-card">
+                <h4>{{ item.producto }}</h4>
+                <div class="prediction-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Actual:</span>
+                        <span class="stat-value">{{ item.stock_actual }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Mínimo:</span>
+                        <span class="stat-value">{{ item.stock_minimo }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Promedio Semanal:</span>
+                        <span class="stat-value">{{ item.promedio_semanal }}</span>
+                    </div>
+                </div>
+                <div class="stat-item highlight">
+                    <span class="stat-label">Cantidad Sugerida:</span>
+                    <span class="stat-value">{{ item.cantidad_sugerida }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="prediction-card empty">
+                <p>No hay datos disponibles.</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
+
+<style>
+/* Estilos compartidos */
+.wrapper {
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+.details-header {
+    margin-bottom: 2.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.details-header:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, #4a6fdc, transparent);
+}
+
+.details-header h2 {
+    font-size: 1.75rem;
+    margin: 0;
+    color: white;
+    font-weight: 700;
+}
+
+/* Estilos para vista de escritorio */
+.desktop-view {
+    display: block;
+    width: 100%;
+}
+
+.prediction-table-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    transition: all 0.3s ease;
+}
+
+.prediction-table-section:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.prediction-table-section h3 {
+    color: #2d3748;
+    font-size: 1.35rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: none;
+    position: relative;
+    font-weight: 600;
+}
+
+.prediction-table-section h3:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: #4a6fdc;
+    border-radius: 3px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+
+.table th {
+    background-color: #4a6fdc;
+    color: white;
+    text-align: left;
+    padding: 1rem 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    position: relative;
+    border: none;
+}
+
+.table th:not(:last-child):after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: rgba(255,255,255,0.3);
+}
+
+.table td {
+    padding: 0.9rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid #edf2f7;
+    color: #333;
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background-color: #f8fafc;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Estilos para vista móvil */
+.mobile-view {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.prediction-section {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.prediction-section h3 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.prediction-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.prediction-card h4 {
+    color: #333;
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.prediction-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.highlight {
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.empty {
+    text-align: center;
+    color: #666;
+    padding: 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Media queries para cambiar entre vistas */
+@media (max-width: 768px) {
+    .desktop-view {
+        display: none;
+    }
+    
+    .mobile-view {
+        display: block;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}

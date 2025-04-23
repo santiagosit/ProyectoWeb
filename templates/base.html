@@ -15,8 +15,8 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark" style="z-index: 900;">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-xl navbar-dark">
+            <div class="container-fluid px-3">
                 <a class="navbar-brand" href="{% url 'home' %}">La Cabañita</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -130,21 +130,25 @@
                     
                     <ul class="navbar-nav ms-auto">
                         {% if profile.rol == 'Administrador' or request.user.is_superuser %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                        <li class="nav-item dropdown" style="margin-right: 10px;">
+                            <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" style="position: relative; padding-right: 15px;">
                                 <img src="{% static 'images/bell.png' %}" alt="Notificaciones" width="24">
                                 {% if num_notificaciones > 0 %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <span class="badge rounded-pill bg-danger" style="position: absolute; top: 0; right: 0; font-size: 0.7rem; padding: 0.25rem 0.4rem;">
                                         {{ num_notificaciones }}
                                     </span>
                                 {% endif %}
                             </a>
                             
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><h6 class="dropdown-header text-danger">Productos bajos en Stock</h6></li>
-                                {% for producto in productos_bajo_stock %}
-                                    <li><span class="dropdown-item">{{ producto.nombre }}: {{ producto.cantidad_stock }} en stock</span></li>
-                                {% endfor %}
+                                <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                                {% if num_notificaciones > 0 %}
+                                    {% for producto in productos_bajo_stock %}
+                                        <li><span class="dropdown-item">{{ producto.nombre }}: {{ producto.cantidad_stock }} en stock</span></li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><span class="dropdown-item">No hay notificaciones nuevas</span></li>
+                                {% endif %}
                             </ul>
                         </li>
                         {% endif %}
@@ -165,7 +169,7 @@
         </nav>
     </header>
 
-    <main class="container my-4">
+    <main class="container-fluid my-2 px-3">
         {% block content %}{% endblock %}
     </main>
 

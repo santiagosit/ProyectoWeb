@@ -3,185 +3,173 @@
 {% block title %}Dashboard - La Cabañita{% endblock %}
 
 {% block content %}
+<div class="wrapper">
+    <h1 class="section-title text-center mb-4">Dashboard Administrativo</h1>
 
-<div class="container-fluid py-4 contenido-ajustado">
-    <h1 class="mb-4 text-center">Dashboard Administrativo</h1>
-
-    <!-- Sección de tarjetas de resumen -->
-    <div class="row text-center">
-        <!-- Primera fila: 4 columnas -->
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-primary font-weight-bold mb-1">VENTAS HOY</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_hoy|floatformat:2 }}</div>
-                    <div class="text-muted">{{ cantidad_ventas_hoy }} transacciones</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-success font-weight-bold mb-1">VENTAS TOTALES DEL MES</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_mes|floatformat:2 }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-info font-weight-bold mb-1">BALANCE MES</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">${{ balance_mes|floatformat:2 }}</div>
-                    <div class="small text-muted">
-                        Ingresos: ${{ total_ingresos_mes|floatformat:2 }} |
-                        Egresos: ${{ total_egresos_mes|floatformat:2 }}
+    <!-- Sección de tarjetas de resumen con diseño innovador -->
+    <div class="dashboard-stats mb-4">
+        <div class="row g-4 justify-content-center">
+            <!-- Tarjeta de Ventas Hoy -->
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-title">Ventas Hoy</h3>
+                        <div class="stat-value">${{ total_ventas_hoy|floatformat:2 }}</div>
+                        <div class="stat-subtitle">{{ cantidad_ventas_hoy }} transacciones</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-warning font-weight-bold mb-1">STOCK BAJO</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cantidad_productos_stock_bajo }}</div>
-                    <div class="small text-muted">Productos con stock bajo</div>
+            <!-- Tarjeta de Ventas del Mes -->
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-title">Ventas del Mes</h3>
+                        <div class="stat-value">${{ total_ventas_mes|floatformat:2 }}</div>
+                        <div class="stat-subtitle">Acumulado mensual</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Balance -->
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card stat-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-title">Balance Mensual</h3>
+                        <div class="stat-value">${{ balance_mes|floatformat:2 }}</div>
+                        <div class="stat-subtitle">
+                            <span class="text-success">+${{ total_ingresos_mes|floatformat:2 }}</span> | 
+                            <span class="text-danger">-${{ total_egresos_mes|floatformat:2 }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Segunda fila: 2 columnas unificadas -->
-    <div class="row">
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="card table-card h-100">
-                <div class="table-card-header">Productos con Stock Bajo</div>
-                <div class="table-card-body">
-                    {% if productos_stock_bajo %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Stock</th>
-                                    <th>Mínimo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for producto in productos_stock_bajo %}
-                                <tr>
-                                    <td>{{ producto.nombre }}</td>
-                                    <td>{{ producto.cantidad_stock }}</td>
-                                    <td>{{ producto.stock_minimo }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+    <!-- Sección de tablas con datos -->
+    <div class="dashboard-tables">
+        <div class="row g-4">
+            <!-- Pedidos Pendientes -->
+            <div class="col-lg-6 col-md-12">
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <h3><i class="fas fa-truck"></i> Pedidos Pendientes</h3>
                     </div>
-                    {% else %}
-                    <p class="text-center">No hay productos con stock bajo.</p>
-                    {% endif %}
+                    <div class="data-card-body">
+                        {% if pedidos_pendientes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Proveedor</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pedido in pedidos_pendientes %}
+                                    <tr>
+                                        <td>#{{ pedido.id }}</td>
+                                        <td>{{ pedido.proveedor.nombre }}</td>
+                                        <td>{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
+                                        <td class="text-end">${{ pedido.total|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>No hay pedidos pendientes</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="card table-card h-100">
-                <div class="table-card-header">Pedidos Pendientes</div>
-                <div class="table-card-body">
-                    {% if pedidos_pendientes %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Proveedor</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for pedido in pedidos_pendientes %}
-                                <tr>
-                                    <td>{{ pedido.id }}</td>
-                                    <td>{{ pedido.proveedor.nombre }}</td>
-                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
-                                    <td>${{ pedido.total|floatformat:2 }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <!-- Productos Más Vendidos -->
+            <div class="col-lg-6 col-md-12">
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <h3><i class="fas fa-trophy"></i> Productos Más Vendidos</h3>
                     </div>
-                    {% else %}
-                    <p class="text-center">No hay pedidos pendientes.</p>
-                    {% endif %}
+                    <div class="data-card-body">
+                        {% if productos_mas_vendidos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-end">Unidades</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for producto in productos_mas_vendidos %}
+                                    <tr>
+                                        <td>{{ producto.producto__nombre }}</td>
+                                        <td class="text-end">{{ producto.total_vendido }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>No hay datos de ventas este mes</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Tercera fila: 2 columnas unificadas -->
-    <div class="row">
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="card table-card">
-                <div class="table-card-header">Productos Más Vendidos (Mes)</div>
-                <div class="table-card-body">
-                    {% if productos_mas_vendidos %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Unidades</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for producto in productos_mas_vendidos %}
-                                <tr>
-                                    <td>{{ producto.producto__nombre }}</td>
-                                    <td>{{ producto.total_vendido }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <!-- Eventos Próximos -->
+            <div class="col-lg-12 col-md-12">
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Eventos Próximos</h3>
                     </div>
-                    {% else %}
-                    <p class="text-center">No hay datos de ventas este mes.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="card table-card">
-                <div class="table-card-header">Eventos Próximos</div>
-                <div class="table-card-body">
-                    {% if eventos_proximos %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>Descripción</th>
-                                    <th>Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for evento in eventos_proximos %}
-                                <tr>
-                                    <td>{{ evento.cliente.nombre }}</td>
-                                    <td>{{ evento.descripcion|truncatechars:30 }}</td>
-                                    <td>{{ evento.fecha_evento|date:"d/m/Y H:i" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="data-card-body">
+                        {% if eventos_proximos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Descripción</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evento in eventos_proximos %}
+                                    <tr>
+                                        <td>{{ evento.cliente.nombre }}</td>
+                                        <td>{{ evento.descripcion|truncatechars:30 }}</td>
+                                        <td>{{ evento.fecha_evento|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-check"></i>
+                            <p>No hay eventos próximos programados</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <p class="text-center">No hay eventos próximos.</p>
-                    {% endif %}
                 </div>
             </div>
         </div>

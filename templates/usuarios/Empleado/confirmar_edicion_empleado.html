@@ -3,28 +3,52 @@
 {% block content %}
 <div class="wrapper">
     <h2 class="section-title">Confirmar Cambios en el Empleado</h2>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="section-cards">
         <div class="card">
             <h3>Datos Actuales</h3>
-            <div class="card-content">
-                <p><strong>Nombre:</strong> {{ empleado.user.username }}</p>
-                <p><strong>Email:</strong> {{ empleado.user.email }}</p>
-                <p><strong>Teléfono:</strong> {{ empleado.telefono }}</p>
-                <p><strong>Dirección:</strong> {{ empleado.direccion }}</p>
-                <p><strong>Fecha de Contratación:</strong> {{ empleado.fecha_contratacion }}</p>
-            </div>
+            <dl>
+                <dt>Usuario:</dt>
+                <dd>{{ empleado.user.username }}</dd>
+                <dt>Email:</dt>
+                <dd>{{ empleado.user.email }}</dd>
+                <dt>Teléfono:</dt>
+                <dd>{{ empleado.telefono|default:"No especificado" }}</dd>
+                <dt>Dirección:</dt>
+                <dd>{{ empleado.direccion|default:"No especificada" }}</dd>
+                <dt>Fecha de Contratación:</dt>
+                <dd>{{ empleado.fecha_contratacion }}</dd>
+            </dl>
         </div>
         
         <div class="card">
             <h3>Nuevos Datos</h3>
-            <div class="card-content">
-                <p><strong>Nombre:</strong> {{ new_data.username }}</p>
-                <p><strong>Email:</strong> {{ new_data.email }}</p>
-                <p><strong>Teléfono:</strong> {{ new_data.telefono }}</p>
-                <p><strong>Dirección:</strong> {{ new_data.direccion }}</p>
-                <p><strong>Fecha de Contratación:</strong> {{ new_data.fecha_contratacion }}</p>
-            </div>
+            <dl>
+                <dt>Usuario:</dt>
+                <dd>{{ new_data.username }}</dd>
+                <dt>Email:</dt>
+                <dd>{{ new_data.email }}</dd>
+                <dt>Teléfono:</dt>
+                <dd>{{ new_data.telefono|default:"No especificado" }}</dd>
+                <dt>Dirección:</dt>
+                <dd>{{ new_data.direccion|default:"No especificada" }}</dd>
+                <dt>Fecha de Contratación:</dt>
+                <dd>{{ new_data.fecha_contratacion }}</dd>
+                {% if new_data.password %}
+                <dt>Contraseña:</dt>
+                <dd>Se actualizará la contraseña</dd>
+                {% endif %}
+            </dl>
         </div>
     </div>
     
@@ -32,7 +56,7 @@
         {% csrf_token %}
         <div class="button-group">
             <button type="submit" class="btn btn-primary">Confirmar Cambios</button>
-            <a href="{% url 'editar_empleado' empleado.id %}" class="btn btn-secondary">Cancelar</a>
+            <a href="{% url 'editar_empleado' empleado.id %}" class="btn btn-secondary">Volver</a>
         </div>
     </form>
 </div>

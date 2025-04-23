@@ -11,7 +11,135 @@
         </a>
     </div>
 
-    <div class="stats-grid">
+    <!-- Vista para escritorio (tablas) -->
+    <div class="desktop-view">
+        <!-- Productos más vendidos -->
+        <div class="report-table-section">
+            <h2>Productos más vendidos</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Total Vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_mas_vendidos %}
+                        <tr>
+                            <td>{{ producto.producto__nombre }}</td>
+                            <td class="text-center">{{ producto.total_vendido }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center">No hay datos disponibles</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Productos sin stock -->
+        <div class="report-table-section">
+            <h2>Productos sin stock</h2>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                Productos que requieren reposición inmediata
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_sin_stock %}
+                        <tr>
+                            <td>
+                                <i class="fas fa-box-open text-danger"></i>
+                                {{ producto.nombre }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center">No hay productos sin stock</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Productos con bajo stock -->
+        <div class="report-table-section">
+            <h2>Productos con bajo stock</h2>
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                Productos por debajo del stock mínimo
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_agotandose %}
+                        <tr>
+                            <td>{{ producto.nombre }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">{{ producto.cantidad_stock }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center">No hay productos con bajo stock</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Productos sin ventas -->
+        <div class="report-table-section">
+            <h2>Productos sin ventas</h2>
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i>
+                Productos que no han registrado ventas
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_no_vendidos %}
+                        <tr>
+                            <td>
+                                <i class="fas fa-box text-secondary"></i>
+                                {{ producto.nombre }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center">Todos los productos tienen ventas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista para móvil (cards) -->
+    <div class="mobile-view stats-grid">
         <div class="report-section card">
             <h2>Productos más vendidos</h2>
             <div class="table-responsive">
@@ -97,51 +225,231 @@
 </div>
 
 <style>
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin: 1.5rem 0;
+/* Estilos compartidos */
+.wrapper {
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 0 15px;
+    box-sizing: border-box;
 }
 
 .report-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.report-header:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, #4a6fdc, transparent);
+}
+
+.report-header h1 {
+    font-size: 1.75rem;
+    margin: 0;
+    color: white;
+    font-weight: 700;
+}
+
+.report-header .btn-success {
+    background-color: #38a169;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.report-header .btn-success:hover {
+    background-color: #2f855a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Estilos para vista de escritorio */
+.desktop-view {
+    display: block;
+    width: 100%;
+}
+
+.report-table-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
     margin-bottom: 2rem;
+    overflow-x: auto;
+    transition: all 0.3s ease;
+}
+
+.report-table-section:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.report-table-section h2 {
+    color: #2d3748;
+    font-size: 1.35rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: none;
+    position: relative;
+    font-weight: 600;
+}
+
+.report-table-section h2:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: #4a6fdc;
+    border-radius: 3px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+
+.table th {
+    background-color: #4a6fdc;
+    color: white;
+    text-align: left;
+    padding: 1rem 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    position: relative;
+    border: none;
+}
+
+.table th:not(:last-child):after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: rgba(255,255,255,0.3);
+}
+
+.table td {
+    padding: 0.9rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid #edf2f7;
+    color: #333;
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background-color: #f8fafc;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+/* Estilos para vista móvil */
+.mobile-view {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
 }
 
 .card {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 1.5rem;
+    padding: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0;
 }
 
 .report-section h2 {
     color: #333;
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
     border-bottom: 2px solid #eee;
     padding-bottom: 0.5rem;
+}
+
+.list-group {
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .list-group-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
 }
 
 .alert {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
 }
 
 .table-responsive {
     overflow-x: auto;
+    max-width: 100%;
 }
 
 .badge {
-    padding: 0.5em 0.75em;
+    padding: 0.25em 0.5em;
+    font-size: 0.8rem;
+}
+
+/* Media queries para cambiar entre vistas */
+@media (max-width: 768px) {
+    .desktop-view {
+        display: none;
+    }
+    
+    .mobile-view {
+        display: grid;
+    }
 }
 </style>
 {% endblock %}
