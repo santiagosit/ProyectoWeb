@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar eliminación de venta{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="confirmation-card">
+        <div class="confirmation-header">
+            <h2 class="section-title text-danger">Confirmar Eliminación</h2>
+            <h4 class="confirmation-subtitle">¿Está seguro que desea eliminar esta venta?</h4>
+        </div>
+        <div class="confirmation-content">
+            <div class="event-details">
+                <p><strong>ID Venta:</strong> #{{ venta.id }}</p>
+                <p><strong>Empleado:</strong> {{ venta.empleado }}</p>
+                <p><strong>Fecha de creación:</strong> {{ venta.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                <p><strong>Estado:</strong> {{ venta.estado|title }}</p>
+                <p><strong>Total:</strong> ${{ venta.total|floatformat:2 }}</p>
+                <p><strong>Observaciones:</strong> {{ venta.observaciones|default:'-' }}</p>
+                {% if venta.ingreso %}
+                <hr>
+                <p><strong>Ingreso asociado:</strong></p>
+                <ul>
+                    <li><strong>Monto:</strong> ${{ venta.ingreso.monto|floatformat:2 }}</li>
+                    <li><strong>Fecha de ingreso:</strong> {{ venta.ingreso.fecha|date:"d/m/Y H:i" }}</li>
+                    <li><strong>Descripción:</strong> {{ venta.ingreso.descripcion|default:'-' }}</li>
+                </ul>
+                {% endif %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p class="mb-0"><strong>Advertencia:</strong> Esta acción eliminará la venta y el ingreso asociado. No se puede deshacer.</p>
+                </div>
+            </div>
+            <form method="post" class="confirmation-actions">
+                {% csrf_token %}
+                <div class="button-group">
+                    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                    <a href="{% url 'listar_ventas' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

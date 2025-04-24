@@ -306,36 +306,66 @@ def editar_venta(request, venta_id):
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                # Actualizar datos básicos de la venta
-                venta.estado = request.POST.get('estado', venta.estado)
-                venta.observaciones = request.POST.get('observaciones', '')
+                # Validación: observaciones no muy largas
+                observaciones = request.POST.get('observaciones', '')
+                if len(observaciones) > 500:
+                    messages.error(request, 'Las observaciones no pueden superar los 500 caracteres.')
+                    return redirect('editar_venta', venta_id=venta.id)
+
+                # Validación: transición de estado
+                nuevo_estado = request.POST.get('estado', venta.estado)
+                estado_anterior = venta.estado
+                if nuevo_estado not in ['pendiente', 'completada', 'cancelada']:
+                    messages.error(request, 'Estado de venta inválido.')
+                    return redirect('editar_venta', venta_id=venta.id)
+                # Solo permitir cancelar desde pendiente o completada
+                if estado_anterior == 'cancelada' and nuevo_estado != 'cancelada':
+                    messages.error(request, 'No se puede reactivar una venta cancelada.')
+                    return redirect('editar_venta', venta_id=venta.id)
+
+                venta.estado = nuevo_estado
+                venta.observaciones = observaciones
                 venta.modificado_por = request.user.profile
-                
-                # Actualizar detalles existentes
+
+                # Validación: detalles y stock
                 detalles_actualizados = []
                 for detalle in detalles:
                     cantidad = int(request.POST.get(f'cantidad_{detalle.id}', 0))
-                    if cantidad > 0:
-                        # Verificar stock disponible
-                        stock_disponible = detalle.producto.cantidad_stock + detalle.cantidad
-                        if cantidad <= stock_disponible:
-                            detalle.cantidad = cantidad
-                            detalle.save()
-                            detalles_actualizados.append(detalle.id)
-                        else:
-                            messages.error(request, f'Stock insuficiente para {detalle.producto.nombre}')
-                            raise ValueError(f'Stock insuficiente para {detalle.producto.nombre}')
-                
+                    if cantidad <= 0:
+                        continue
+                    # Verificar stock disponible
+                    stock_disponible = detalle.producto.cantidad_stock + detalle.cantidad
+                    if cantidad > stock_disponible:
+                        messages.error(request, f'Stock insuficiente para {detalle.producto.nombre}')
+                        raise ValueError(f'Stock insuficiente para {detalle.producto.nombre}')
+                    detalle.cantidad = cantidad
+                    detalle.save()
+                    detalles_actualizados.append(detalle.id)
+
                 # Eliminar detalles no actualizados
                 venta.detalles.exclude(id__in=detalles_actualizados).delete()
-                
+
+                # Validación: al menos un detalle
+                if venta.detalles.count() == 0:
+                    messages.error(request, 'Debe haber al menos un producto en la venta.')
+                    raise ValueError('Debe haber al menos un producto en la venta.')
+
                 # Actualizar totales
                 venta.actualizar_total()
                 venta.save()
-                
+
+                # Si existe un ingreso asociado y la venta no está cancelada, actualizar el monto
+                if hasattr(venta, 'ingreso') and nuevo_estado != 'cancelada':
+                    venta.ingreso.monto = venta.total
+                    venta.ingreso.save()
+
+                # Si se cancela la venta, eliminar el ingreso asociado
+                if estado_anterior != 'cancelada' and nuevo_estado == 'cancelada':
+                    if hasattr(venta, 'ingreso'):
+                        venta.ingreso.delete()
+
                 messages.success(request, '¡Venta actualizada exitosamente!')
                 return redirect('detalle_venta', venta_id=venta.id)
-
         except Exception as e:
             messages.error(request, f'Error al actualizar la venta: {str(e)}')
             return redirect('editar_venta', venta_id=venta.id)
@@ -344,6 +374,21 @@ def editar_venta(request, venta_id):
         'venta': venta,
         'detalles': detalles
     })
+
+@login_required
+@user_passes_test(is_admin_or_superuser)
+def eliminar_venta(request, venta_id):
+    venta = get_object_or_404(Venta, id=venta_id)
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                venta.delete()  # Elimina también el ingreso asociado por cascada
+                messages.success(request, 'Venta e ingreso asociado eliminados exitosamente.')
+                return redirect('listar_ventas')
+        except Exception as e:
+            messages.error(request, f'Error al eliminar la venta: {str(e)}')
+            return redirect('listar_ventas')
+    return render(request, 'ventas/venta_confirm_delete.html', {'venta': venta})
 
 @login_required
 def mis_ventas(request):
