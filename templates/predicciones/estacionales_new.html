@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load predicciones_filters %}
+
+{% block title %}Predicciones Estacionales{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/estilosinv.css' %}">
+<link rel="stylesheet" href="{% static 'css/predicciones.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="wrapper">
+        <div class="details-header">
+            <h2>Predicciones Estacionales para Productos Alcohólicos</h2>
+            <p class="subtitle">Análisis de tendencias estacionales y oportunidades de compra para productos alcohólicos</p>
+        </div>
+        
+        <div class="prediccion-section">
+            <div class="prediccion-content">
+                <ul class="nav nav-tabs" id="categoriasTabs" role="tablist">
+                    {% for categoria, productos in categorias.items %}
+                        {% if productos %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if forloop.first %}active{% endif %}" 
+                                    id="{{ categoria }}-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#{{ categoria }}" 
+                                    type="button" 
+                                    role="tab" 
+                                    aria-controls="{{ categoria }}" 
+                                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                                {{ categoria|title }}
+                            </button>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                            
+                <div class="tab-content" id="categoriasContent">
+                    {% for categoria, productos in categorias.items %}
+                        {% if productos %}
+                        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" 
+                             id="{{ categoria }}" 
+                             role="tabpanel" 
+                             aria-labelledby="{{ categoria }}-tab">
+                            
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Stock Actual</th>
+                                            <th>Precio Actual</th>
+                                            <th>Predicción</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for producto in productos %}
+                                        <tr>
+                                            <td>
+                                                <div class="producto-info">
+                                                    <span class="producto-nombre">{{ producto.nombre }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="stock-actual">{{ producto.stock_actual }} unidades</span>
+                                            </td>
+                                            <td>
+                                                <span class="precio-actual">${{ producto.precio_actual }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn-action dropdown-toggle" type="button" id="dropdownMenuButton{{ producto.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Seleccionar Mes
+                                                    </button>
+                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ producto.id }}">
+                                                        {% for mes_num, mes_nombre in meses_futuros %}
+                                                        <li>
+                                                            <a class="dropdown-item generar-prediccion" 
+                                                               href="#" 
+                                                               data-producto-id="{{ producto.id }}" 
+                                                               data-mes="{{ mes_num }}">
+                                                                {{ mes_nombre }}
+                                                            </a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn-action btn-info ver-tendencias" data-producto-id="{{ producto.id }}">
+                                                    Ver Tendencias
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar predicciones -->
+    <div class="modal fade" id="prediccionModal" tabindex="-1" aria-labelledby="prediccionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="prediccionModalLabel">Predicción Estacional</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div style="flex: 1; margin-right: 1rem;">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Información General</h3>
+                                </div>
+                                <div class="prediccion-content">
+                                    <p><strong>Producto:</strong> <span id="producto-nombre"></span></p>
+                                    <p><strong>Mes de Predicción:</strong> <span id="mes-prediccion"></span></p>
+                                    <p><strong>Temporada:</strong> <span id="temporada"></span></p>
+                                    <p><strong>Confianza de la predicción:</strong> <span id="confianza"></span>%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Métricas Clave</h3>
+                                </div>
+                                <div class="prediccion-content">
+                                    <p><strong>Demanda Estimada:</strong> <span id="demanda-estimada"></span> unidades</p>
+                                    <p><strong>Precio Estimado:</strong> $<span id="precio-estimado"></span></p>
+                                    <p><strong>Stock Recomendado:</strong> <span id="stock-recomendado"></span> unidades</p>
+                                    <p class="oportunidad-compra-info"><strong>Oportunidad de Compra:</strong> <span id="oportunidad-compra"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Factores Estacionales</h3>
+                                </div>
+                                <div class="prediccion-content">
+                                    <p id="factores-estacionales"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Recomendaciones</h3>
+                                </div>
+                                <div class="prediccion-content">
+                                    <p id="recomendacion"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar tendencias -->
+    <div class="modal fade" id="tendenciasModal" tabindex="-1" aria-labelledby="tendenciasModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tendenciasModalLabel">Análisis de Tendencias</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="chart-container" style="position: relative; height:400px; width:100%">
+                                <canvas id="tendenciasChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4" id="tendenciasDetalles">
+                        <div style="flex: 1; margin-right: 1rem;">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Oportunidades de Compra</h3>
+                                </div>
+                                <div class="prediccion-content" id="oportunidadesCompra">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="prediccion-container">
+                                <div class="prediccion-header">
+                                    <h3>Oportunidades Identificadas</h3>
+                                </div>
+                                <div class="prediccion-content">
+                                    <div id="oportunidadesIdentificadas">
+                                        <p class="text-center">Cargando oportunidades...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/predicciones_estacionales.js' %}"></script>
+{% endblock %}

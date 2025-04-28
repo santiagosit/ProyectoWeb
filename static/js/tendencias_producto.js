@@ -1,105 +1,113 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Obtener los datos desde el elemento oculto
     const chartDataElement = document.getElementById('chart-data');
-    
-    if (!chartDataElement) {
+    const contenedor = document.getElementById('curvas-tendencia');
+    if (!chartDataElement || !contenedor) {
         console.error('No se encontró el elemento con los datos de los gráficos');
         return;
     }
-    
-    // Función para parsear datos JSON de forma segura
-    function safeJSONParse(str, defaultValue) {
-        try {
-            return JSON.parse(str) || defaultValue;
-        } catch (e) {
-            console.error('Error al parsear JSON:', e);
-            return defaultValue;
-        }
+    // Parsear el JSON de tendencias
+    let tendenciaData = {};
+    try {
+        tendenciaData = JSON.parse(chartDataElement.dataset.tendenciaJson);
+    } catch (e) {
+        console.error('Error al parsear JSON de tendencia:', e);
+        return;
     }
-    
-    // Extraer datos de los atributos
-    const ventasLabels = safeJSONParse(chartDataElement.dataset.ventasLabels, []);
-    const ventasUnidades = safeJSONParse(chartDataElement.dataset.ventasDatos, []);
-    const preciosLabels = safeJSONParse(chartDataElement.dataset.preciosLabels, []);
-    const preciosValores = safeJSONParse(chartDataElement.dataset.preciosDatos, []);
-    const stockLabels = safeJSONParse(chartDataElement.dataset.stockLabels, []);
-    const stockValores = safeJSONParse(chartDataElement.dataset.stockDatos, []);
-    
-    // Datos para el gráfico de ventas
-    const ventasData = {
-        labels: ventasLabels,
-        datasets: [{
-            label: 'Unidades Vendidas',
-            data: ventasUnidades,
-            backgroundColor: 'rgba(78, 115, 223, 0.2)',
-            borderColor: 'rgba(78, 115, 223, 1)',
-            borderWidth: 2,
-            tension: 0.3
-        }]
-    };
-
-    // Datos para el gráfico de precios
-    const preciosData = {
-        labels: preciosLabels,
-        datasets: [{
-            label: 'Precio',
-            data: preciosValores,
-            backgroundColor: 'rgba(28, 200, 138, 0.2)',
-            borderColor: 'rgba(28, 200, 138, 1)',
-            borderWidth: 2,
-            tension: 0.3
-        }]
-    };
-
-    // Datos para el gráfico de stock
-    const stockData = {
-        labels: stockLabels,
-        datasets: [{
-            label: 'Stock',
-            data: stockValores,
-            backgroundColor: 'rgba(246, 194, 62, 0.2)',
-            borderColor: 'rgba(246, 194, 62, 1)',
-            borderWidth: 2,
-            tension: 0.3
-        }]
-    };
-
-    // Configuración común para los gráficos
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: false
+    // Por cada producto, crear un canvas y graficar la curva de ventas y la predicción
+    Object.entries(tendenciaData).forEach(([producto, datos]) => {
+        // Crear elementos
+        const card = document.createElement('div');
+        card.className = 'tendencia-card';
+        const title = document.createElement('h4');
+        title.textContent = producto;
+        const canvas = document.createElement('canvas');
+        canvas.id = 'chart-' + producto.replace(/\s+/g, '-').toLowerCase();
+        canvas.height = 180;
+        // Sugerencia
+        const sugerencia = document.createElement('div');
+        sugerencia.className = 'tendencia-sugerencia';
+        sugerencia.innerHTML = `<b>Predicción próxima semana:</b> ${datos.prediccion} unidades.<br>` +
+            (datos.prediccion > 0 ? 'Sugerencia: Evalúa realizar pedido si el stock será insuficiente.' : 'Sin ventas proyectadas.');
+        // Añadir al DOM
+        card.appendChild(title);
+        card.appendChild(canvas);
+        card.appendChild(sugerencia);
+        contenedor.appendChild(card);
+        // Preparar datos para Chart.js
+        const labels = datos.labels.concat(['Predicción']);
+        const data = datos.data.concat([datos.prediccion]);
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Unidades Vendidas',
+                    data: data,
+                    backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: labels.map((l,i) => i === labels.length-1 ? 'rgba(28, 200, 138, 1)' : 'rgba(78, 115, 223, 1)'),
+                    pointRadius: labels.map((l,i) => i === labels.length-1 ? 6 : 3),
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                if(ctx.dataIndex === data.length-1) return 'Predicción: ' + ctx.parsed.y;
+                                return 'Unidades: ' + ctx.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
-        }
-    };
-
-    // Crear gráficos solo si existen los elementos en el DOM
-    const ventasChart = document.getElementById('ventasChart');
-    if (ventasChart) {
-        new Chart(ventasChart, {
-            type: 'line',
-            data: ventasData,
-            options: commonOptions
         });
-    }
-    
-    const preciosChart = document.getElementById('preciosChart');
-    if (preciosChart) {
-        new Chart(preciosChart, {
-            type: 'line',
-            data: preciosData,
-            options: commonOptions
-        });
-    }
-    
-    const stockChart = document.getElementById('stockChart');
-    if (stockChart) {
-        new Chart(stockChart, {
-            type: 'line',
-            data: stockData,
-            options: commonOptions
-        });
-    }
+    });
 });
+
+// Estilos para las tarjetas de tendencia
+const style = document.createElement('style');
+style.innerHTML = `
+.tendencia-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 480px;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 2rem;
+}
+.tendencia-card h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: #2d3748;
+}
+.tendencia-sugerencia {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-left: 3px solid #4a6fdc;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #333;
+}
+@media (max-width: 900px) {
+    .tendencia-card {
+        max-width: 100%;
+        margin-right: 0;
+        display: block;
+    }
+}`;
+document.head.appendChild(style);

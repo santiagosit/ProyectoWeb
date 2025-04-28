@@ -4,5 +4,8 @@ from . import views
 app_name = 'predicciones'  # Asegúrate de que el app_name esté definido
 
 urlpatterns = [    
-    path('predicciones/', views.dashboard_predicciones, name='dashboard_predicciones'),
+    # Dashboard principal
+    path('dashboard/', views.dashboard_predicciones, name='dashboard'),
+    
+    # Predicciones estacionales para productos alcohólico
 ]

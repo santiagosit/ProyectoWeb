@@ -25,6 +25,7 @@ class Pedido(models.Model):
         ('en camino', 'En camino'),
         ('recibido', 'Recibido'),
     ], default='pedido')
+    observaciones = models.TextField(blank=True, null=True)
 
     @property
     def total(self):

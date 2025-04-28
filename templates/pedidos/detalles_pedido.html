@@ -22,6 +22,7 @@
                             {{ pedido.get_estado_display }}
                         </span>
                     </p>
+                    <p><strong>Observaciones:</strong> {{ pedido.observaciones|default:"Sin observaciones" }}</p>
                 </div>
 
                 <div class="detail-group">

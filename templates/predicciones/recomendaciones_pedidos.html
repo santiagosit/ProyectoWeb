@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load predicciones_filters %}
+
+{% block title %}Recomendaciones de Pedidos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/predicciones.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="details-header">
+        <h2>Recomendaciones de Pedidos para Productos Alcohólicos</h2>
+        <p class="subtitle">Oportunidades de compra identificadas basadas en predicciones estacionales</p>
+    </div>
+    
+    <div class="prediccion-section">
+        <div class="prediccion-header">
+            <h3>Oportunidades Inmediatas</h3>
+            <p class="prediccion-subtitle">Productos con oportunidades de compra en los próximos 30 días</p>
+                        
+        {% if oportunidades_inmediatas %}
+        <div class="table-container">
+            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Producto</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Mes</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Fecha Óptima</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Días Restantes</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Stock Actual</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Stock Recomendado</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Diferencia</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Ahorro Potencial</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Confianza</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for oportunidad in oportunidades_inmediatas %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-2 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">{{ oportunidad.producto }}</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.nombre_mes }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.fecha_optima|date:"d/m/Y" }}</p>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if oportunidad.dias_hasta_fecha <= 7 %}danger{% elif oportunidad.dias_hasta_fecha <= 15 %}warning{% else %}info{% endif %}">
+                                                {{ oportunidad.dias_hasta_fecha }} días
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.stock_actual }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.stock_recomendado }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0 {% if oportunidad.diferencia_stock > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                {% if oportunidad.diferencia_stock > 0 %}+{% endif %}{{ oportunidad.diferencia_stock }}
+                                            </p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0 text-success">${{ oportunidad.ahorro_potencial|floatformat:2 }}</p>
+                                        </td>
+                                        <td>
+                                            <div class="progress-container">
+    <div class="progress-label">{{ oportunidad.confianza }}%</div>
+    <div class="progress">
+        <div class="progress-bar progress-bar-{% if oportunidad.confianza >= 80 %}success{% elif oportunidad.confianza >= 60 %}info{% else %}warning{% endif %}" 
+             role="progressbar" 
+             aria-valuenow="{{ oportunidad.confianza }}" 
+             aria-valuemin="0" 
+             aria-valuemax="100"        
+             
+        </div>
+    </div>
+</div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            No se han identificado oportunidades inmediatas para los próximos 30 días.
+                        </div>
+                        {% endif %}
+                        
+    </div>
+    
+    <div class="prediccion-section">
+        <div class="prediccion-header">
+            <h3>Planificación Futura</h3>
+            <p class="prediccion-subtitle">Oportunidades de compra para los próximos meses</p>
+                        
+        {% if planificacion_futura %}
+        <div class="table-container">
+            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Producto</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Mes</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Fecha Óptima</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Stock Actual</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Stock Recomendado</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Diferencia</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Ahorro Potencial</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Margen Esperado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for oportunidad in planificacion_futura %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-2 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">{{ oportunidad.producto }}</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.nombre_mes }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.fecha_optima|date:"d/m/Y" }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.stock_actual }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.stock_recomendado }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0 {% if oportunidad.diferencia_stock > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                {% if oportunidad.diferencia_stock > 0 %}+{% endif %}{{ oportunidad.diferencia_stock }}
+                                            </p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0 text-success">${{ oportunidad.ahorro_potencial|floatformat:2 }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ oportunidad.margen_esperado|floatformat:1 }}%</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            No se han identificado oportunidades de compra para los próximos meses.
+                        </div>
+                        {% endif %}
+    </div>
+    
+    <div class="prediccion-section">
+        <div class="prediccion-header">
+            <h3>Recomendaciones Generales</h3>
+        </div>
+        <div class="prediccion-content">
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Tendencias Estacionales para Productos Alcohólicos</h6>
+                        <hr>
+                        <p><strong>Cerveza:</strong> Precios más bajos en noviembre, antes de la temporada alta de diciembre. Mayor demanda en meses cálidos (mayo-agosto).</p>
+                        <p><strong>Vino:</strong> Oportunidades de compra en enero-febrero (liquidaciones post-navidad). Alta demanda en el último trimestre del año.</p>
+                        <p><strong>Destilados:</strong> Precios más bajos en febrero-marzo. Pico de demanda en diciembre.</p>
+                        <p><strong>Licores:</strong> Comportamiento similar a los destilados, con oportunidades de compra en el primer trimestre del año.</p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">Consideraciones Importantes</h6>
+                        <hr>
+                        <ul>
+                            <li>Las predicciones se basan en datos históricos y patrones estacionales identificados.</li>
+                            <li>La confianza de las predicciones depende de la cantidad y calidad de los datos disponibles.</li>
+                            <li>Factores externos como cambios en el mercado, eventos especiales o promociones pueden afectar los precios y la demanda.</li>
+                            <li>Se recomienda revisar las predicciones periódicamente para ajustar la planificación de compras.</li>
+                        </ul>
+                    </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,9 +4,14 @@ from .models import Pedido, PedidoDetalle, Proveedor
 class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
-        fields = ['proveedor']
+        fields = ['proveedor', 'observaciones']
         widgets = {
             'proveedor': forms.Select(attrs={'class': 'form-control'}),
+            'observaciones': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Ingrese observaciones adicionales'
+            }),
         }
 
 class PedidoDetalleForm(forms.ModelForm):

@@ -4,9 +4,347 @@
 {% block title %}Dashboard de Predicciones{% endblock %}
 
 {% block content %}
+<!-- Cargar la librería Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 <div class="wrapper">
+    <!-- Curva de tendencia y sugerencia de pedido -->
+    <div class="prediction-table-section">
+        <h3>Curva de tendencia y predicción de ventas (últimos 6 meses)</h3>
+        <div class="period-info">
+            <p>Período analizado: {{ periodo_analisis }} a {{ fecha_analisis }}</p>
+            <p>Predicción hasta: {{ prediccion_hasta }}</p>
+        </div>
+        
+        <!-- Advertencia si no hay productos reales -->
+        {% if sin_productos_reales %}
+        <div class="alert alert-warning" style="max-width: 500px;">
+            <strong>Advertencia:</strong> No hay productos reales en la base de datos. Se están mostrando datos de prueba. Por favor, registre productos y ventas reales para obtener predicciones reales.
+        </div>
+        {% endif %}
+        <!-- Formulario para seleccionar producto -->
+        <form method="get" class="producto-selector-container mb-4" style="max-width: 400px;">
+            <label for="producto-select" class="form-label">Seleccionar producto:</label>
+            <select id="producto-select" name="producto" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Selecciona un producto --</option>
+                {% for producto in productos %}
+                    <option value="{{ producto.id }}" {% if producto_seleccionado and producto.id == producto_seleccionado.id %}selected{% endif %}>{{ producto.nombre }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        
+        <!-- Contenedor para el gráfico con dimensiones fijas -->
+        <div id="grafica-tendencia" style="width: 100%; height: 500px; border: 1px solid #ddd; margin-bottom: 20px; background: #fff; display: flex; align-items: center; justify-content: center;">
+            {% if producto_seleccionado %}
+                {% if labels and data %}
+                    <canvas id="chart-producto" height="200"></canvas>
+                {% else %}
+                    <span class="text-muted">No hay datos de ventas para este producto en los últimos 6 meses.</span>
+                {% endif %}
+            {% else %}
+                <span class="text-muted">Selecciona un producto para ver la gráfica.</span>
+            {% endif %}
+        </div>
+
+        {% if producto_seleccionado and labels and data %}
+        {{ labels|json_script:"labels-data" }}
+        {{ data|json_script:"ventas-data" }}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- Si quieres la línea vertical, debes tener chartjs-plugin-annotation -->
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0"></script>
+        <script>
+const ctx = document.getElementById('chart-producto').getContext('2d');
+let labels = JSON.parse(document.getElementById('labels-data').textContent);
+let dataVentas = JSON.parse(document.getElementById('ventas-data').textContent);
+// Inicializa variables para oportunidad de pedido
+let fechaPedido = null;
+let pedidoIndex = -1;
+let puntoPedido = null;
+{% if fecha_sugerida %}
+fechaPedido = '{{ fecha_sugerida|default:""|slice:":7" }}';
+pedidoIndex = labels.indexOf(fechaPedido);
+// Si no existe el mes sugerido pero hay sugerencia, usa el último punto del gráfico
+if (pedidoIndex === -1 && fechaPedido && labels.length > 0) {
+    pedidoIndex = labels.length - 1;
+}
+puntoPedido = (pedidoIndex !== -1 && fechaPedido) ? Math.max(...dataVentas) : null;
+{% endif %}
+let datasets = [
+    {
+        label: 'Unidades Vendidas',
+        data: dataVentas,
+        borderColor: 'rgba(78, 115, 223, 1)',
+        backgroundColor: 'rgba(78, 115, 223, 0.2)',
+        fill: true,
+        tension: 0.3
+    }
+];
+if (pedidoIndex !== -1 && puntoPedido !== null) {
+    datasets.push({
+        label: 'Oportunidad de Pedido',
+        data: labels.map((l, i) => i === pedidoIndex ? puntoPedido : null),
+        borderColor: 'rgba(255, 193, 7, 1)',
+        backgroundColor: 'rgba(255, 193, 7, 0.3)',
+        pointRadius: 8,
+        pointHoverRadius: 10,
+        type: 'scatter',
+        showLine: false,
+        spanGaps: false,
+        order: 2,
+    });
+}
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        if(context.dataset.label === 'Oportunidad de Pedido') {
+                            return 'Oportunidad de Pedido: ' + '{{ fecha_sugerida|default:"-" }}';
+                        }
+                        return context.dataset.label + ': ' + context.parsed.y;
+                    }
+                }
+            },
+            annotation: {
+                annotations: {
+                    linePedido: (pedidoIndex !== -1) ? {
+                        type: 'line',
+                        xMin: pedidoIndex,
+                        xMax: pedidoIndex,
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        borderWidth: 3,
+                        label: {
+                            enabled: true,
+                            content: 'Oportunidad de Pedido',
+                            position: 'start',
+                            backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                            color: '#1a237e',
+                            font: { weight: 'bold' }
+                        }
+                    } : null
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+        </script>
+        {% endif %}
+        
+        <!-- Contenedor para información adicional -->
+        <div id="info-prediccion" class="mt-4">
+            {% if producto_seleccionado %}
+            <div class="pedido-sugerencia-panel" style="max-width: 700px; margin: 0 auto;">
+                <div class="pedido-sugerencia-header">
+                    <strong>Predicción de Oportunidad de Pedido</strong>
+                </div>
+                <div class="pedido-sugerencia-body">
+                    <div class="pedido-sugerencia-row">
+                        <span class="pedido-sugerencia-label">Demanda proyectada (mensual):</span>
+                        <span class="pedido-sugerencia-value">{{ demanda_proyectada }} unidades{% if temporada_alta %} <span class="badge bg-warning text-dark">Temporada alta</span>{% endif %}</span>
+                    </div>
+                    <div class="pedido-sugerencia-row">
+                        <span class="pedido-sugerencia-label">Cantidad sugerida para pedir:</span>
+                        <span class="pedido-sugerencia-value">{{ cantidad_sugerida }} unidades</span>
+                    </div>
+                    <div class="pedido-sugerencia-row">
+                        <span class="pedido-sugerencia-label">Fecha sugerida para pedido:</span>
+                        <span class="pedido-sugerencia-value">{{ fecha_sugerida|default:'-' }}</span>
+                    </div>
+                    <div class="pedido-sugerencia-row">
+                        <span class="pedido-sugerencia-label">Urgencia:</span>
+                        <span class="pedido-sugerencia-value">
+                            {% if urgencia == 'Alta' %}
+                                <span class="badge bg-danger">Alta</span>
+                            {% elif urgencia == 'Media' %}
+                                <span class="badge bg-warning text-dark">Media</span>
+                            {% elif urgencia == 'Baja' %}
+                                <span class="badge bg-success">Baja</span>
+                            {% else %}-{% endif %}
+                        </span>
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size: 0.95em;">
+                        <em>La predicción se basa en ventas de los últimos 6 meses y el stock actual. La demanda se ajusta si es temporada alta (junio, diciembre).</em>
+                    </div>
+                </div>
+            </div>
+            <!-- Card solo para móvil -->
+            <div class="card pedido-sugerencia-card d-block d-md-none mt-3" style="max-width: 600px; margin: 0 auto;">
+                <div class="card-header bg-primary text-white">
+                    <strong>Predicción de Oportunidad de Pedido</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Demanda proyectada (mensual):</strong>
+                            {{ demanda_proyectada }} unidades{% if temporada_alta %} <span class="badge bg-warning text-dark">Temporada alta</span>{% endif %}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Cantidad sugerida para pedir:</strong> {{ cantidad_sugerida }} unidades
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Fecha sugerida para pedido:</strong> {{ fecha_sugerida|default:'-' }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Urgencia:</strong> 
+                            {% if urgencia == 'Alta' %}
+                                <span class="badge bg-danger">Alta</span>
+                            {% elif urgencia == 'Media' %}
+                                <span class="badge bg-warning text-dark">Media</span>
+                            {% elif urgencia == 'Baja' %}
+                                <span class="badge bg-success">Baja</span>
+                            {% else %}-{% endif %}
+                        </li>
+                    </ul>
+                    <div class="mt-2 text-muted" style="font-size: 0.95em;">
+                        <em>La predicción se basa en ventas de los últimos 6 meses y el stock actual. La demanda se ajusta si es temporada alta (junio, diciembre).</em>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <style>
+        /* Panel de sugerencia para escritorio */
+        .pedido-sugerencia-panel {
+            background: var(--card-background, #fff);
+            border-radius: var(--card-border-radius, 12px);
+            box-shadow: var(--card-shadow, 0 4px 20px rgba(26,35,126,0.1));
+            border: 1px solid var(--border-color, #e0e0e0);
+            padding: 1.5rem 2.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        .pedido-sugerencia-header {
+            color: var(--primary-color, #1a237e);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .pedido-sugerencia-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border-color, #e0e0e0);
+            font-size: 1.1rem;
+        }
+        .pedido-sugerencia-label {
+            font-weight: 500;
+            color: var(--text-muted, #757575);
+        }
+        .pedido-sugerencia-value {
+            font-weight: 600;
+            color: var(--primary-color, #1a237e);
+        }
+        @media (min-width: 768px) {
+            .pedido-sugerencia-panel { display: block; }
+            .pedido-sugerencia-card { display: none !important; }
+        }
+        @media (max-width: 767.98px) {
+            .pedido-sugerencia-panel { display: none; }
+            .pedido-sugerencia-card { display: block !important; }
+        }
+        </style>
+        
+        <!-- Datos JSON para el gráfico -->
+        <div id="chart-data" style="display:none;" data-tendencia-json='{{ tendencia_predicciones_json|escapejs }}'></div>
+        
+        <!-- Bloque de depuración (se ocultará en producción) -->
+        <div class="debug-info mt-4 p-3 border" style="background-color: #f8f9fa;">
+            <h5>Información de depuración</h5>
+            <p>Período analizado: {{ periodo_analisis }} a {{ fecha_analisis }}</p>
+            <p>Predicción hasta: {{ prediccion_hasta }}</p>
+            <p>Cantidad de productos con datos: <span id="cantidad-productos">0</span></p>
+            <p>Nombres de productos: <span id="nombres-productos">Ninguno</span></p>
+        </div>
+    </div>
     <div class="details-header">
         <h2>Dashboard de Predicciones de Negocio</h2>
+    </div>
+    
+    <!-- Oportunidades de Pedido -->
+    <div class="prediction-table-section">
+        <h3>Oportunidades de Pedido para el Próximo Mes</h3>
+        <p class="section-description">Basado en el análisis de tendencias de venta de los últimos 6 meses y la predicción de demanda para el próximo mes.</p>
+        
+        <!-- Vista para escritorio -->
+        <div class="desktop-view">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                            <th>Demanda Proyectada</th>
+                            <th>Cantidad Sugerida</th>
+                            <th>Fecha Sugerida</th>
+                            <th>Urgencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in oportunidades_pedido %}
+                        <tr class="urgencia-{{ item.urgencia|lower }}">
+                            <td>{{ item.producto }}</td>
+                            <td class="text-center">{{ item.stock_actual }}</td>
+                            <td class="text-center">{{ item.demanda_proyectada }}</td>
+                            <td class="text-center">{{ item.cantidad_sugerida }}</td>
+                            <td class="text-center">{{ item.fecha_sugerida }}</td>
+                            <td class="text-center urgencia-badge urgencia-{{ item.urgencia|lower }}">{{ item.urgencia }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center">No hay oportunidades de pedido identificadas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Vista para móvil -->
+        <div class="mobile-view">
+            {% for item in oportunidades_pedido %}
+            <div class="prediction-card urgencia-card-{{ item.urgencia|lower }}">
+                <h4>{{ item.producto }}</h4>
+                <div class="prediction-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Actual:</span>
+                        <span class="stat-value">{{ item.stock_actual }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Demanda Proyectada:</span>
+                        <span class="stat-value">{{ item.demanda_proyectada }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Cantidad Sugerida:</span>
+                        <span class="stat-value">{{ item.cantidad_sugerida }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Fecha Sugerida:</span>
+                        <span class="stat-value">{{ item.fecha_sugerida }}</span>
+                    </div>
+                </div>
+                <div class="urgencia-tag urgencia-{{ item.urgencia|lower }}">
+                    Urgencia: {{ item.urgencia }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="prediction-card empty">
+                <p>No hay oportunidades de pedido identificadas.</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
     <!-- Vista para escritorio (tablas) -->
@@ -216,6 +554,88 @@
     border-radius: 3px;
 }
 
+.period-info {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.section-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.urgencia-alta {
+    background-color: rgba(255, 99, 71, 0.05);
+}
+
+.urgencia-media {
+    background-color: rgba(255, 193, 7, 0.05);
+}
+
+.urgencia-baja {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.urgencia-badge {
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.urgencia-badge.urgencia-alta {
+    background-color: rgba(255, 99, 71, 0.2);
+    color: #d63031;
+}
+
+.urgencia-badge.urgencia-media {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #e17055;
+}
+
+.urgencia-badge.urgencia-baja {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #27ae60;
+}
+
+.urgencia-tag {
+    margin-top: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.urgencia-tag.urgencia-alta {
+    background-color: rgba(255, 99, 71, 0.2);
+    color: #d63031;
+}
+
+.urgencia-tag.urgencia-media {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #e17055;
+}
+
+.urgencia-tag.urgencia-baja {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #27ae60;
+}
+
+.urgencia-card-alta {
+    border-left: 4px solid #d63031;
+}
+
+.urgencia-card-media {
+    border-left: 4px solid #e17055;
+}
+
+.urgencia-card-baja {
+    border-left: 4px solid #27ae60;
+}
+
 .table {
     width: 100%;
     border-collapse: separate;
@@ -361,6 +781,74 @@
     font-size: 0.85rem;
 }
 
+/* Estilos para la información de predicción */
+.prediccion-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.prediccion-resumen h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.prediccion-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 150px;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.stat-title {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4a6fdc;
+}
+
+.stat-desc {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+.producto-selector {
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.producto-selector label {
+    font-weight: 600;
+    color: #333;
+}
+
+.producto-selector select {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
 /* Media queries para cambiar entre vistas */
 @media (max-width: 768px) {
     .desktop-view {
@@ -370,11 +858,462 @@
     .mobile-view {
         display: block;
     }
+    
+    .prediccion-stats {
+        flex-direction: column;
+    }
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/predicciones_dashboard.js' %}"></script>
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Plotly.js para gráficas -->
+<script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
+
+<!-- Script para generar las gráficas de tendencia con Plotly.js -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inicializando dashboard de predicciones...');
+    
+    // Verificar que Plotly esté disponible
+    if (typeof Plotly === 'undefined') {
+      console.error('Plotly no está disponible. Asegúrate de incluir la librería.');
+      alert('Error: La librería Plotly no está disponible. Por favor, recarga la página o contacta al administrador.');
+      return;
+    }
+    
+    console.log('Plotly está disponible:', Plotly.version);
+    
+    // Obtener el elemento que contiene los datos
+    const chartDataElement = document.getElementById('chart-data');
+    if (!chartDataElement) {
+      console.error('No se encontró el elemento chart-data');
+      return;
+    }
+    
+    // Obtener el contenedor donde se mostrará la gráfica
+    const graficaContainer = document.getElementById('grafica-tendencia');
+    if (!graficaContainer) {
+      console.error('No se encontró el contenedor para la gráfica');
+      return;
+    }
+    
+    // Obtener el contenedor para la información adicional
+    const infoContainer = document.getElementById('info-prediccion');
+    if (!infoContainer) {
+      console.error('No se encontró el contenedor para la información adicional');
+      return;
+    }
+    
+    try {
+      // Parsear los datos JSON
+      const dataAttribute = chartDataElement.getAttribute('data-tendencia-json');
+      if (!dataAttribute) {
+        throw new Error('El atributo data-tendencia-json está vacío');
+      }
+      
+      console.log('Datos JSON raw:', dataAttribute);
+      
+      // Actualizar la información de depuración
+      document.getElementById('cantidad-productos').textContent = '0 (verificando datos...)';  
+      
+      // Intentar parsear los datos JSON
+      let tendenciaData;
+      try {
+        tendenciaData = JSON.parse(dataAttribute);
+        console.log('Datos parseados correctamente');
+      } catch (parseError) {
+        console.error('Error al parsear JSON:', parseError);
+        document.getElementById('cantidad-productos').textContent = 'ERROR: ' + parseError.message;
+        graficaContainer.innerHTML = `<div class="alert alert-danger">Error al parsear los datos JSON: ${parseError.message}</div>`;
+        return;
+      }
+      
+      // Actualizar la información de depuración con los datos obtenidos
+      const cantidadProductos = Object.keys(tendenciaData).length;
+      document.getElementById('cantidad-productos').textContent = cantidadProductos;
+      document.getElementById('nombres-productos').textContent = 
+        cantidadProductos > 0 ? Object.keys(tendenciaData).join(', ') : 'Ninguno';
+      
+      console.log('Datos cargados:', cantidadProductos, 'productos');
+      console.log('Nombres de productos:', Object.keys(tendenciaData));
+      
+      // Si no hay datos, mostrar un mensaje
+      if (cantidadProductos === 0) {
+        graficaContainer.innerHTML = '<div class="alert alert-warning">No hay datos disponibles para mostrar</div>';
+        return;
+      }
+      
+      // Obtener el selector de productos
+      const selectElement = document.getElementById('producto-select');
+      
+      // Llenar el selector con los productos disponibles
+      Object.keys(tendenciaData).forEach(producto => {
+        const option = document.createElement('option');
+        option.value = producto;
+        option.textContent = producto;
+        selectElement.appendChild(option);
+      });
+      
+      console.log('Selector de productos inicializado con', selectElement.options.length, 'opciones');
+      
+      // Función para actualizar el gráfico
+      function updateChart(productoSeleccionado) {
+        console.log('Actualizando gráfica para:', productoSeleccionado);
+        
+        // Obtener datos del producto seleccionado
+        const data = tendenciaData[productoSeleccionado];
+        if (!data) {
+          console.error('No hay datos para este producto:', productoSeleccionado);
+          chartContainer.innerHTML = `<div class="alert alert-danger">No hay datos disponibles para ${productoSeleccionado}</div>`;
+          return;
+        }
+        
+        // Determinar dónde termina el histórico y comienza la predicción
+        const historicoLength = data.historico.length;
+        const totalLength = data.labels.length;
+        
+        console.log('Datos históricos:', historicoLength, 'Total:', totalLength);
+        
+        // Buscar información de pedido para este producto en la tabla
+        const oportunidadesPedido = Array.from(document.querySelectorAll('.desktop-view .table tbody tr'))
+          .filter(row => row.cells && row.cells[0] && row.cells[0].textContent.trim() === productoSeleccionado.trim());
+        
+        // Variables para información de pedido
+        let puntoPedido = null;
+        let urgenciaPedido = null;
+        let cantidadSugerida = null;
+        let fechaPedido = null;
+        
+        // Si encontramos información de pedido para este producto
+        if (oportunidadesPedido.length > 0) {
+          const row = oportunidadesPedido[0];
+          cantidadSugerida = row.cells[3].textContent.trim();
+          fechaPedido = row.cells[4].textContent.trim();
+          urgenciaPedido = row.cells[5].textContent.trim().toLowerCase();
+          
+          console.log('Información de pedido encontrada:', fechaPedido, cantidadSugerida, urgenciaPedido);
+          
+          // Determinar el punto de pedido en la gráfica
+          if (fechaPedido !== "Inmediato") {
+            // Encontrar el índice de la fecha en las etiquetas
+            const fechaIndex = data.labels.findIndex(fecha => fecha === fechaPedido);
+            if (fechaIndex !== -1) {
+              puntoPedido = fechaIndex;
+            }
+          } else {
+            // Si es inmediato, marcar en el punto actual
+            puntoPedido = historicoLength;
+          }
+        }
+        
+        // Preparar los datos para Plotly
+        // Traza para datos históricos
+        const trazaHistorico = {
+          x: data.labels.slice(0, historicoLength),
+          y: data.historico,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Ventas Históricas',
+          line: {
+            color: '#4a6fdc',
+            width: 3
+          },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(74, 111, 220, 0.1)'
+        };
+        
+        // Traza para datos de predicción
+        const trazaPrediccion = {
+          x: data.labels.slice(historicoLength),
+          y: data.prediccion,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Predicción',
+          line: {
+            color: '#ff6b6b',
+            width: 3,
+            dash: 'dash'
+          },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(255, 107, 107, 0.1)'
+        };
+        
+        // Arreglo para almacenar todas las trazas
+        const trazas = [trazaHistorico, trazaPrediccion];
+        
+        // Añadir marcador para punto de pedido si existe
+        if (puntoPedido !== null) {
+          // Determinar el valor Y para el punto de pedido
+          let valorY;
+          if (puntoPedido < historicoLength) {
+            valorY = data.historico[puntoPedido];
+          } else {
+            valorY = data.prediccion[puntoPedido - historicoLength];
+          }
+          
+          // Colores según urgencia
+          let colorPedido = '#e74c3c'; // rojo por defecto (alta)
+          if (urgenciaPedido === 'media') {
+            colorPedido = '#f39c12';
+          } else if (urgenciaPedido === 'baja') {
+            colorPedido = '#27ae60';
+          }
+          
+          // Añadir traza para el punto de pedido
+          const trazaPuntoPedido = {
+            x: [data.labels[puntoPedido]],
+            y: [valorY],
+            type: 'scatter',
+            mode: 'markers',
+            name: 'Punto de Pedido',
+            marker: {
+              color: colorPedido,
+              size: 15,
+              symbol: 'triangle-down'
+            },
+            hoverinfo: 'text',
+            text: [`¡REALIZAR PEDIDO AQUÍ!<br>Fecha: ${fechaPedido}<br>Cantidad: ${cantidadSugerida} unidades<br>Urgencia: ${urgenciaPedido.toUpperCase()}`]
+          };
+          
+          trazas.push(trazaPuntoPedido);
+          
+          // Añadir línea vertical para el punto de pedido
+          const maxY = Math.max(...data.historico, ...data.prediccion) * 1.2;
+          
+          const trazaLineaPedido = {
+            x: [data.labels[puntoPedido], data.labels[puntoPedido]],
+            y: [0, maxY],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Línea de Pedido',
+            line: {
+              color: colorPedido,
+              width: 2,
+              dash: 'dash'
+            },
+            showlegend: false
+          };
+          
+          trazas.push(trazaLineaPedido);
+        }
+        
+        // Configuración del layout
+        const layout = {
+          title: {
+            text: `Tendencia de Ventas: ${productoSeleccionado}`,
+            font: {
+              size: 18,
+              color: '#2c3e50'
+            }
+          },
+          xaxis: {
+            title: 'Fecha',
+            gridcolor: '#e0e0e0'
+          },
+          yaxis: {
+            title: 'Unidades Vendidas',
+            gridcolor: '#e0e0e0'
+          },
+          plot_bgcolor: '#ffffff',
+          paper_bgcolor: '#ffffff',
+          hovermode: 'closest',
+          legend: {
+            orientation: 'h',
+            y: -0.2
+          },
+          margin: {
+            l: 60,
+            r: 30,
+            t: 80,
+            b: 80
+          },
+          annotations: []
+        };
+        
+        // Añadir anotación para punto de pedido si existe
+        if (puntoPedido !== null) {
+          layout.annotations.push({
+            x: data.labels[puntoPedido],
+            y: layout.yaxis.range ? layout.yaxis.range[1] * 0.95 : null,
+            text: '¡Punto de Pedido!',
+            showarrow: true,
+            arrowhead: 2,
+            arrowcolor: '#e74c3c',
+            arrowsize: 1,
+            arrowwidth: 2,
+            ax: 0,
+            ay: -40
+          });
+        }
+        
+        // Crear el gráfico con Plotly
+        console.log('Creando gráfica con Plotly...');
+        console.log('Contenedor:', graficaContainer);
+        console.log('Trazas:', JSON.stringify(trazas));
+        
+        // Configuración de opciones para Plotly
+        const config = {
+          responsive: true,
+          displayModeBar: false
+        };
+        
+        try {
+          // Asegurarse de que el contenedor esté visible y tenga dimensiones
+          graficaContainer.style.height = '500px';
+          graficaContainer.style.width = '100%';
+          
+          // Limpiar el contenedor antes de crear la gráfica
+          graficaContainer.innerHTML = '';
+          
+          // Crear el gráfico con Plotly
+          Plotly.newPlot(graficaContainer, trazas, layout, config);
+          console.log('Gráfica creada exitosamente con Plotly');
+        } catch (error) {
+          console.error('Error al crear la gráfica con Plotly:', error);
+          graficaContainer.innerHTML = `<div class="alert alert-danger mt-3">Error al crear la gráfica: ${error.message}</div>`;
+        }
+        
+        // Mostrar información adicional en el contenedor designado
+        // Determinar el color de urgencia si hay punto de pedido
+        let colorUrgencia = '#e74c3c'; // rojo por defecto (alta)
+        if (urgenciaPedido === 'media') {
+          colorUrgencia = '#f39c12';
+        } else if (urgenciaPedido === 'baja') {
+          colorUrgencia = '#27ae60';
+        }
+        
+        // Construir el HTML para el resumen de predicción
+        let infoHTML = `
+          <div class="card shadow-sm">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">Resumen de predicción para ${productoSeleccionado}</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="stat-card p-3 mb-3 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="text-muted mb-2">Predicción Mensual</h6>
+                        <h3 class="mb-0">${data.prediccion_mensual}</h3>
+                        <small class="text-muted">unidades</small>
+                      </div>
+                      <div class="stat-icon">
+                        <i class="fas fa-chart-line fa-2x text-primary"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        `;
+        
+        // Añadir información de pedido si existe
+        if (puntoPedido !== null) {
+          infoHTML += `
+                <div class="col-md-6">
+                  <div class="stat-card p-3 mb-3 bg-light rounded" style="border-left: 4px solid ${colorUrgencia};">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="text-muted mb-2">Punto de Pedido</h6>
+                        <h3 class="mb-0">${fechaPedido}</h3>
+                        <small class="text-muted">Cantidad: ${cantidadSugerida} unidades</small>
+                        <div class="mt-2">
+                          <span class="badge" style="background-color: ${colorUrgencia}; color: white; padding: 5px 10px;">
+                            Urgencia: ${urgenciaPedido.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="color: ${colorUrgencia};"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+          `;
+        }
+        
+        // Cerrar las etiquetas HTML
+        infoHTML += `
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Actualizar el contenedor de información
+        infoContainer.innerHTML = infoHTML;
+      }
+      
+      // Inicializar el gráfico con el primer producto
+      if (selectElement && selectElement.options.length > 0) {
+        // Asegurarse de que el primer elemento esté seleccionado
+        selectElement.selectedIndex = 0;
+        console.log('Inicializando con el producto:', selectElement.value);
+        
+        // Crear el gráfico inicial
+        updateChart(selectElement.value);
+        
+        // Actualizar cuando cambie la selección
+        selectElement.addEventListener('change', function() {
+          console.log('Producto cambiado a:', this.value);
+          // Limpiar el gráfico anterior
+          Plotly.purge('grafica-tendencia');
+          // Actualizar con el nuevo producto
+          updateChart(this.value);
+        });
+        
+        // Añadir evento de redimensionamiento para hacer la gráfica responsive
+        window.addEventListener('resize', function() {
+          Plotly.Plots.resize(document.getElementById('grafica-tendencia'));
+        });
+      } else {
+        console.error('No se encontró el selector de productos o no tiene valores');
+        graficaContainer.innerHTML = '<div class="alert alert-warning">No hay productos disponibles para mostrar. Si ves esta advertencia y tienes productos en la base de datos, revisa la estructura de los datos enviados desde el backend.</div>';
+        // Mostrar advertencia también en el selector
+        if (selectElement) {
+          selectElement.innerHTML = '<option>No hay productos disponibles</option>';
+        }
+      }
+    } catch (error) {
+      // Capturar y mostrar cualquier error que ocurra
+      console.error('Error al procesar los datos de tendencia:', error);
+      
+      // Mostrar el error en el contenedor de la gráfica
+      if (graficaContainer) {
+        graficaContainer.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Error al cargar la gráfica:</strong> ${error.message}
+            <br>
+            <small>Consulta la consola para más detalles.</small>
+          </div>
+        `;
+      }
+    }
+  });
+</script>
+
+<!-- Estilos adicionales para las gráficas -->
+<style>
+  .chart-container {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+  }
+  
+  .producto-selector {
+    max-width: 400px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    transition: all 0.3s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+</style>
 {% endblock %}
