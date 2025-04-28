@@ -90,6 +90,7 @@ TEMPLATES = [
             'django.contrib.messages.context_processors.messages',
             'app_inventario.views.notificaciones',
             'app_usuarios.context_processors.add_profile_to_context',
+            'app_eventos.context_processors.notificaciones_eventos',
         ]),
     },
 ]
@@ -180,4 +181,3 @@ LOGIN_EXEMPT_URLS = [
 ]
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
-

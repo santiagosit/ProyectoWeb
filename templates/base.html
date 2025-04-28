@@ -131,20 +131,31 @@
                         <li class="nav-item dropdown" style="margin-right: 10px;">
                             <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" style="position: relative; padding-right: 15px;">
                                 <img src="{% static 'images/bell.png' %}" alt="Notificaciones" width="24">
-                                {% if num_notificaciones > 0 %}
+                                {% if num_notificaciones > 0 or num_notificaciones_eventos > 0 %}
                                     <span class="badge rounded-pill bg-danger" style="position: absolute; top: 0; right: 0; font-size: 0.7rem; padding: 0.25rem 0.4rem;">
-                                        {{ num_notificaciones }}
+                                        {{ num_notificaciones|add:num_notificaciones_eventos }}
                                     </span>
                                 {% endif %}
                             </a>
                             
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                                
                                 {% if num_notificaciones > 0 %}
+                                    <li><h6 class="dropdown-header">Productos con bajo stock</h6></li>
                                     {% for producto in productos_bajo_stock %}
                                         <li><span class="dropdown-item">{{ producto.nombre }}: {{ producto.cantidad_stock }} en stock</span></li>
                                     {% endfor %}
-                                {% else %}
+                                {% endif %}
+                                
+                                {% if num_notificaciones_eventos > 0 %}
+                                    <li><h6 class="dropdown-header">Eventos próximos (en 3 días)</h6></li>
+                                    {% for evento in eventos_proximos_notificacion %}
+                                        <li><span class="dropdown-item">{{ evento.cliente.nombre }} - {{ evento.fecha_evento|date:"d/m/Y H:i" }}</span></li>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if num_notificaciones == 0 and num_notificaciones_eventos == 0 %}
                                     <li><span class="dropdown-item">No hay notificaciones nuevas</span></li>
                                 {% endif %}
                             </ul>

@@ -2,10 +2,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import IntegrityError, transaction
+from django.utils import timezone
+from datetime import timedelta
 
 from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
 from .models import Evento, Cliente
 
+
+def get_eventos_proximos():
+    """Obtiene eventos que ocurrirán en los próximos 3 días"""
+    hoy = timezone.now()
+    tres_dias_despues = hoy + timedelta(days=3)
+    # Eventos que ocurren exactamente en 3 días (con un margen de 24 horas)
+    return Evento.objects.filter(
+        estado__in=['Pendiente', 'Confirmado'],
+        fecha_evento__gte=tres_dias_despues.replace(hour=0, minute=0, second=0),
+        fecha_evento__lt=tres_dias_despues.replace(hour=23, minute=59, second=59)
+    )
 
 
 @login_required
