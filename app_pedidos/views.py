@@ -48,7 +48,32 @@ def listar_pedidos(request):
 @user_passes_test(is_admin_or_superuser)
 def listar_proveedores(request):
     proveedores = Proveedor.objects.all()
-    return render(request, 'pedidos/listar_proveedores.html', {'proveedores': proveedores})
+
+    # Filtros GET
+    nombre = request.GET.get('nombre', '').strip()
+    telefono = request.GET.get('telefono', '').strip()
+    email = request.GET.get('email', '').strip()
+    direccion = request.GET.get('direccion', '').strip()
+
+    if nombre:
+        proveedores = proveedores.filter(nombre__icontains=nombre)
+    if telefono:
+        proveedores = proveedores.filter(telefono__icontains=telefono)
+    if email:
+        proveedores = proveedores.filter(email__icontains=email)
+    if direccion:
+        proveedores = proveedores.filter(direccion__icontains=direccion)
+
+    context = {
+        'proveedores': proveedores,
+        'filtros': {
+            'nombre': nombre,
+            'telefono': telefono,
+            'email': email,
+            'direccion': direccion,
+        }
+    }
+    return render(request, 'pedidos/listar_proveedores.html', context)
 
 
 @login_required

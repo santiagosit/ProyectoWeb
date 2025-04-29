@@ -9,6 +9,7 @@ from django.db.models import Sum
 
 # Local imports
 from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
+from app_usuarios.models import Profile
 from app_inventario.models import Producto
 from app_finanzas.models import Ingreso
 from .models import Venta, VentaDetalle
@@ -286,16 +287,35 @@ def detalle_venta(request, venta_id):
         return redirect('listar_ventas')
 
 @login_required
-@user_passes_test(is_employee_or_above)
 def listar_ventas(request):
-    if request.user.profile.rol == 'Empleado':
-        # Empleados solo ven sus ventas
-        ventas = Venta.objects.filter(creado_por=request.user.profile)
-    else:
-        # Admins y superusers ven todas las ventas
-        ventas = Venta.objects.all()
-    
-    return render(request, 'ventas/listar_ventas.html', {'ventas': ventas})
+    ventas = Venta.objects.all().order_by('-fecha_creacion')
+
+    # Filtros
+    empleado_id = request.GET.get('empleado')
+    fecha = request.GET.get('fecha')
+    estado = request.GET.get('estado')
+
+    if empleado_id:
+        ventas = ventas.filter(empleado_id=empleado_id)
+    if fecha:
+        ventas = ventas.filter(fecha_creacion__date=fecha)
+    if estado:
+        ventas = ventas.filter(estado=estado)
+
+    empleados = Profile.objects.all().order_by('nombre_completo')
+    estados = Venta.ESTADO_CHOICES
+
+    context = {
+        'ventas': ventas,
+        'empleados': empleados,
+        'estados': estados,
+        'filtros': {
+            'empleado': empleado_id,
+            'fecha': fecha,
+            'estado': estado,
+        }
+    }
+    return render(request, 'ventas/listar_ventas.html', context)
 
 @login_required
 @user_passes_test(is_admin_or_superuser)

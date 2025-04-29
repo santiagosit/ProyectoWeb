@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 
+{% block head %}
+{% endblock %}
+
 {% block title %}Listado de Ventas{% endblock %}
 
 {% block content %}
 <div class="wrapper">
-    <h1>Listado de Ventas</h1>
+    <h2 class="section-title">Listado de Ventas</h2>
 
     {% if messages %}
     <div class="form-messages">
@@ -16,17 +19,63 @@
     </div>
     {% endif %}
 
-    <div class="actions mb-4">
-        <a href="{% url 'registrar_venta' %}" class="btn btn-primary">
-            Nueva Venta
+    <div class="filters-section">
+        <button id="filtroButton" class="btn btn-primary">
+            <i class="fas fa-filter"></i> Filtros
+        </button>
+        <a href="{% url 'registrar_venta' %}" class="cta-btn">
+            <i class="fas fa-plus"></i> Nueva Venta
         </a>
     </div>
 
-    <div class="table-responsive">
+    <!-- Modal para filtros -->
+    <div id="filtroModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="filtroForm" method="GET" action="{% url 'listar_ventas' %}">
+                <h3>Filtrar Ventas</h3>
+
+                <div class="form-group">
+                    <label for="filtro-empleado">Empleado:</label>
+                    <select id="filtro-empleado" name="empleado" class="form-control">
+                        <option value="">Todos</option>
+                        {% for emp in empleados %}
+                            <option value="{{ emp.id }}" {% if filtros.empleado == emp.id|stringformat:'s' %}selected{% endif %}>{{ emp.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filtro-fecha">Fecha:</label>
+                    <input type="date" id="filtro-fecha" name="fecha" class="form-control" value="{{ filtros.fecha }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="filtro-estado">Estado:</label>
+                    <select id="filtro-estado" name="estado" class="form-control">
+                        <option value="">Todos</option>
+                        {% for val, label in estados %}
+                            <option value="{{ val }}" {% if filtros.estado == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                    <a href="{% url 'listar_ventas' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
         <table class="table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Fecha</th>
                     <th>Empleado</th>
                     <th>Estado</th>
@@ -39,7 +88,6 @@
             <tbody>
                 {% for venta in ventas %}
                 <tr>
-                    <td>#{{ venta.id }}</td>
                     <td>{{ venta.fecha_creacion|date:"d/m/Y H:i" }}</td>
                     <td>{{ venta.empleado.nombre_completo }}</td>
                     <td>
@@ -68,11 +116,33 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center">No hay ventas registradas</td>
+                    <td colspan="7" class="text-center">No hay ventas registradas</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('filtroModal');
+        const btn = document.getElementById('filtroButton');
+        const span = document.querySelector('.close');
+        if (btn) {
+            btn.onclick = function() {
+                modal.style.display = "block";
+            }
+        }
+        if (span) {
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    });
+</script>
 {% endblock %}

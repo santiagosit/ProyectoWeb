@@ -36,12 +36,51 @@ def notificaciones(request):
 @user_passes_test(is_employee_or_above)
 def listar_productos(request):
     productos = Producto.objects.all()
+
+    # Filtros GET
+    nombre = request.GET.get('nombre', '').strip()
+    descripcion = request.GET.get('descripcion', '').strip()
+    precio_min = request.GET.get('precio_min', '').strip()
+    precio_max = request.GET.get('precio_max', '').strip()
+    stock_min = request.GET.get('stock_min', '').strip()
+    stock_max = request.GET.get('stock_max', '').strip()
+    stockmin_min = request.GET.get('stockmin_min', '').strip()
+    stockmin_max = request.GET.get('stockmin_max', '').strip()
+
+    if nombre:
+        productos = productos.filter(nombre__icontains=nombre)
+    if descripcion:
+        productos = productos.filter(descripcion__icontains=descripcion)
+    if precio_min:
+        productos = productos.filter(precio__gte=precio_min)
+    if precio_max:
+        productos = productos.filter(precio__lte=precio_max)
+    if stock_min:
+        productos = productos.filter(cantidad_stock__gte=stock_min)
+    if stock_max:
+        productos = productos.filter(cantidad_stock__lte=stock_max)
+    if stockmin_min:
+        productos = productos.filter(stock_minimo__gte=stockmin_min)
+    if stockmin_max:
+        productos = productos.filter(stock_minimo__lte=stockmin_max)
+
     productos_bajo_stock = get_productos_bajo_stock()
-    return render(request, 'inventarios/listar_productos.html', {
+    context = {
         'productos': productos,
         'productos_bajo_stock': productos_bajo_stock,
-        'num_notificaciones': len(productos_bajo_stock)
-    })
+        'num_notificaciones': len(productos_bajo_stock),
+        'filtros': {
+            'nombre': nombre,
+            'descripcion': descripcion,
+            'precio_min': precio_min,
+            'precio_max': precio_max,
+            'stock_min': stock_min,
+            'stock_max': stock_max,
+            'stockmin_min': stockmin_min,
+            'stockmin_max': stockmin_max,
+        }
+    }
+    return render(request, 'inventarios/listar_productos.html', context)
 
 
 # Protected views - Admin level access

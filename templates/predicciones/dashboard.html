@@ -275,78 +275,6 @@ const chart = new Chart(ctx, {
         <h2>Dashboard de Predicciones de Negocio</h2>
     </div>
     
-    <!-- Oportunidades de Pedido -->
-    <div class="prediction-table-section">
-        <h3>Oportunidades de Pedido para el Próximo Mes</h3>
-        <p class="section-description">Basado en el análisis de tendencias de venta de los últimos 6 meses y la predicción de demanda para el próximo mes.</p>
-        
-        <!-- Vista para escritorio -->
-        <div class="desktop-view">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Stock Actual</th>
-                            <th>Demanda Proyectada</th>
-                            <th>Cantidad Sugerida</th>
-                            <th>Fecha Sugerida</th>
-                            <th>Urgencia</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in oportunidades_pedido %}
-                        <tr class="urgencia-{{ item.urgencia|lower }}">
-                            <td>{{ item.producto }}</td>
-                            <td class="text-center">{{ item.stock_actual }}</td>
-                            <td class="text-center">{{ item.demanda_proyectada }}</td>
-                            <td class="text-center">{{ item.cantidad_sugerida }}</td>
-                            <td class="text-center">{{ item.fecha_sugerida }}</td>
-                            <td class="text-center urgencia-badge urgencia-{{ item.urgencia|lower }}">{{ item.urgencia }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6" class="text-center">No hay oportunidades de pedido identificadas.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Vista para móvil -->
-        <div class="mobile-view">
-            {% for item in oportunidades_pedido %}
-            <div class="prediction-card urgencia-card-{{ item.urgencia|lower }}">
-                <h4>{{ item.producto }}</h4>
-                <div class="prediction-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Stock Actual:</span>
-                        <span class="stat-value">{{ item.stock_actual }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Demanda Proyectada:</span>
-                        <span class="stat-value">{{ item.demanda_proyectada }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Cantidad Sugerida:</span>
-                        <span class="stat-value">{{ item.cantidad_sugerida }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Fecha Sugerida:</span>
-                        <span class="stat-value">{{ item.fecha_sugerida }}</span>
-                    </div>
-                </div>
-                <div class="urgencia-tag urgencia-{{ item.urgencia|lower }}">
-                    Urgencia: {{ item.urgencia }}
-                </div>
-            </div>
-            {% empty %}
-            <div class="prediction-card empty">
-                <p>No hay oportunidades de pedido identificadas.</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
     <!-- Vista para escritorio (tablas) -->
     <div class="desktop-view">
         <div class="prediction-table-section">
@@ -363,7 +291,7 @@ const chart = new Chart(ctx, {
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in entre_semana %}
+                        {% for item in predicciones_entre_semana %}
                         <tr>
                             <td>{{ item.producto }}</td>
                             <td class="text-center">{{ item.stock_actual }}</td>
@@ -393,7 +321,7 @@ const chart = new Chart(ctx, {
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in fin_de_semana %}
+                        {% for item in predicciones_fin_de_semana %}
                         <tr>
                             <td>{{ item.producto }}</td>
                             <td class="text-center">{{ item.stock_actual }}</td>
@@ -416,7 +344,7 @@ const chart = new Chart(ctx, {
             <h3>Sugerencias para Pedidos Entre Semana</h3>
             <p class="subtitle">Abastecer fin de semana</p>
             
-            {% for item in entre_semana %}
+            {% for item in predicciones_entre_semana %}
             <div class="prediction-card">
                 <h4>{{ item.producto }}</h4>
                 <div class="prediction-stats">
@@ -449,7 +377,7 @@ const chart = new Chart(ctx, {
             <h3>Sugerencias para Pedidos Fin de Semana</h3>
             <p class="subtitle">Abastecer entre semana</p>
             
-            {% for item in fin_de_semana %}
+            {% for item in predicciones_fin_de_semana %}
             <div class="prediction-card">
                 <h4>{{ item.producto }}</h4>
                 <div class="prediction-stats">

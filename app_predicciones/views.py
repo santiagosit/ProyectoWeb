@@ -249,6 +249,44 @@ def dashboard_predicciones(request):
     orden_urgencia = {'Alta': 0, 'Media': 1, 'Baja': 2}
     oportunidades_pedido.sort(key=lambda x: (orden_urgencia[x['urgencia']], -x['cantidad_sugerida']))
     
+    # --- SUGERENCIAS PARA TABLAS (mejorada) ---
+    predicciones_entre_semana = []
+    predicciones_fin_de_semana = []
+    for producto in productos:
+        ventas = VentaDetalle.objects.filter(
+            producto=producto,
+            venta__estado='completada',
+            venta__fecha_creacion__gte=hoy - timedelta(days=28)  # 4 semanas
+        )
+        ventas_entre_semana = 0
+        ventas_fin_de_semana = 0
+        for v in ventas:
+            dia = v.venta.fecha_creacion.weekday()
+            if dia < 4:  # lunes (0) a jueves (3)
+                ventas_entre_semana += v.cantidad
+            else:  # viernes (4) a domingo (6)
+                ventas_fin_de_semana += v.cantidad
+        promedio_entre_semana = ventas_entre_semana // 4
+        promedio_fin_de_semana = ventas_fin_de_semana // 4
+        sugerido_entre_semana = max(promedio_entre_semana - producto.cantidad_stock, 0)
+        sugerido_fin_de_semana = max(promedio_fin_de_semana - producto.cantidad_stock, 0)
+        if sugerido_entre_semana > 0:
+            predicciones_entre_semana.append({
+                'producto': producto.nombre,
+                'stock_actual': producto.cantidad_stock,
+                'stock_minimo': producto.stock_minimo,
+                'promedio_semanal': promedio_entre_semana,
+                'cantidad_sugerida': sugerido_entre_semana
+            })
+        if sugerido_fin_de_semana > 0:
+            predicciones_fin_de_semana.append({
+                'producto': producto.nombre,
+                'stock_actual': producto.cantidad_stock,
+                'stock_minimo': producto.stock_minimo,
+                'promedio_semanal': promedio_fin_de_semana,
+                'cantidad_sugerida': sugerido_fin_de_semana
+            })
+
     # Si no hay datos o hay pocos productos, crear datos de prueba para verificar que la gráfica funcione
     if not tendencia_predicciones or len(tendencia_predicciones) < 2:
         print("No hay datos reales suficientes, generando datos de prueba para la gráfica...")
@@ -342,8 +380,8 @@ def dashboard_predicciones(request):
     
     sin_productos_reales = (Producto.objects.count() == 0)
     context = {
-        'entre_semana': predicciones_entre_semana,
-        'fin_de_semana': predicciones_fin_de_semana,
+        'predicciones_entre_semana': predicciones_entre_semana,
+        'predicciones_fin_de_semana': predicciones_fin_de_semana,
         'tendencia_predicciones_json': tendencia_predicciones_json,
         'oportunidades_pedido': oportunidades_pedido,
         'fecha_analisis': hoy.strftime('%Y-%m-%d'),
