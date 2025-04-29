@@ -89,8 +89,8 @@ TEMPLATES = [
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
             'app_inventario.views.notificaciones',
-            'app_usuarios.context_processors.add_profile_to_context',
-            'app_eventos.context_processors.notificaciones_eventos',
+'app_usuarios.context_processors.add_profile_to_context',
+'app_eventos.context_processors.notificaciones_eventos',
         ]),
     },
 ]

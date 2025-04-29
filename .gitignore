@@ -1,0 +1,21 @@
+# Python
+*.pyc
+__pycache__/
+
+# Entornos virtuales
+env/
+venv/
+
+# Archivos de migraciones compilados
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Base de datos local
+*.sqlite3
+
+# Archivos de configuración local
+.env
+
+# Archivos de tu editor
+.idea/
+.vscode/
