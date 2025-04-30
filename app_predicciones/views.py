@@ -11,6 +11,102 @@ import json
 from collections import defaultdict
 import calendar
 import numpy as np
+from sklearn.linear_model import LinearRegression  # Para regresión lineal
+
+@login_required
+def oportunidad_compra_prediccion(request):
+    hoy = timezone.now()
+    hace_3_anios = hoy - timedelta(days=365*3)
+    productos = Producto.objects.all()
+    producto_id = request.GET.get('producto')
+    producto_seleccionado = None
+    labels = []
+    data_historico = []
+    data_prediccion = []
+    promedio_historico = []
+    oportunidad_indices = []
+    mejor_mes = None
+    mejor_precio = None
+
+    if producto_id:
+        try:
+            producto_seleccionado = Producto.objects.get(id=producto_id)
+            detalles = PedidoDetalle.objects.filter(
+                producto=producto_seleccionado,
+                pedido__estado='recibido',
+                pedido__fecha_pedido__gte=hace_3_anios
+            ).order_by('pedido__fecha_pedido')
+            # Agrupar por mes y calcular el precio promedio mensual
+            precios_por_mes = {}
+            cantidades_por_mes = {}
+            for det in detalles:
+                mes = det.pedido.fecha_pedido.strftime('%Y-%m')
+                if mes not in precios_por_mes:
+                    precios_por_mes[mes] = 0
+                    cantidades_por_mes[mes] = 0
+                precios_por_mes[mes] += float(det.costo_unitario) * det.cantidad
+                cantidades_por_mes[mes] += det.cantidad
+            # Calcular promedio mensual
+            meses_ordenados = sorted(precios_por_mes.keys())
+            precios_historicos = []
+            for mes in meses_ordenados:
+                if cantidades_por_mes[mes] > 0:
+                    labels.append(mes)
+                    precio_mes = round(precios_por_mes[mes] / cantidades_por_mes[mes], 2)
+                    data_historico.append(precio_mes)
+                    precios_historicos.append(precio_mes)
+            # Calcular umbral de oportunidad (percentil 25 de precios históricos)
+            if precios_historicos:
+                import numpy as np
+                percentil_25 = np.percentile(precios_historicos, 25)
+                for idx, precio in enumerate(data_historico):
+                    if precio <= percentil_25 or any(abs(precio - p) / p < 0.05 for p in precios_historicos if p <= percentil_25):
+                        oportunidad_indices.append(idx)
+            # Predicción de precios futuros (próximos 6 meses)
+            meses_futuros = 6
+            if len(data_historico) > 1:
+                import numpy as np
+                from sklearn.linear_model import LinearRegression
+                x = np.arange(len(data_historico)).reshape(-1, 1)
+                y = np.array(data_historico)
+                model = LinearRegression()
+                model.fit(x, y)
+                for i in range(len(data_historico), len(data_historico) + meses_futuros):
+                    pred = float(model.predict(np.array([[i]])))
+                    data_prediccion.append(round(pred, 2))
+                    # Calcular el siguiente mes
+                    last_month = datetime.strptime(meses_ordenados[-1], '%Y-%m')
+                    next_month = (last_month.month + (i - len(data_historico) + 1) - 1) % 12 + 1
+                    next_year = last_month.year + ((last_month.month + (i - len(data_historico) + 1) - 1) // 12)
+                    labels.append(f"{next_year}-{next_month:02d}")
+            elif len(data_historico) == 1:
+                for i in range(meses_futuros):
+                    data_prediccion.append(data_historico[0])
+                    last_month = datetime.strptime(meses_ordenados[-1], '%Y-%m')
+                    next_month = (last_month.month + (i + 1) - 1) % 12 + 1
+                    next_year = last_month.year + ((last_month.month + (i + 1) - 1) // 12)
+                    labels.append(f"{next_year}-{next_month:02d}")
+            # Calcular promedio histórico para la línea de referencia
+            if data_historico:
+                prom = round(sum(data_historico) / len(data_historico), 2)
+                promedio_historico = [prom] * (len(data_historico) + len(data_prediccion))
+            # Recomendar el mejor mes para comprar (menor precio futuro)
+            if data_prediccion:
+                mejor_precio = min(data_prediccion)
+                mejor_idx = data_prediccion.index(mejor_precio)
+                mejor_mes = labels[len(data_historico) + mejor_idx] if len(labels) > len(data_historico) + mejor_idx else None
+        except Producto.DoesNotExist:
+            producto_seleccionado = None
+    context = {
+        'productos': productos,
+        'producto_seleccionado': producto_seleccionado,
+        'labels': json.dumps(labels),
+        'data_historico': json.dumps(data_historico),
+        'data_prediccion': json.dumps([None]*len(data_historico) + data_prediccion),  # Predicción solo en meses futuros
+        'promedio_historico': json.dumps(promedio_historico),
+        'oportunidad_indices': json.dumps(oportunidad_indices),
+    }
+    return render(request, 'predicciones/oportunidad_compra.html', context)
 
 @login_required
 def dashboard_predicciones(request):

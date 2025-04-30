@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Oportunidad de Compra - Predicción de Precios</h2>
+    <form method="get" class="mb-4">
+        <label for="producto">Selecciona un producto:</label>
+        <select name="producto" id="producto" class="form-control" onchange="this.form.submit()">
+            {% for producto in productos %}
+                <option value="{{ producto.id }}" {% if producto.id == producto_seleccionado.id %}selected{% endif %}>{{ producto.nombre }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% if mejor_mes and mejor_precio %}
+    <div class="alert alert-success mt-4" role="alert">
+        <strong>¡Recomendación de compra!</strong><br>
+        El mejor mes para comprar <b>{{ producto_seleccionado.nombre }}</b> es <b>{{ mejor_mes }}</b> con un precio estimado de <b>${{ mejor_precio }}</b>.
+    </div>
+    {% endif %}
+    <div style="overflow-x:auto;">
+        <canvas id="chartOportunidad" height="100"></canvas>
+    </div>
+    <div class="mt-4">
+        <h5>Interpretación:</h5>
+        <ul>
+            <li>La línea azul muestra el precio promedio mensual histórico.</li>
+            <li>La línea naranja muestra la predicción de precios futuros.</li>
+            <li>Las zonas verdes indican oportunidades de compra (precio futuro menor al promedio histórico).</li>
+        </ul>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script>
+    const labels = {{ labels|safe }};
+    const dataHistorico = {{ data_historico|safe }};
+    const dataPrediccion = {{ data_prediccion|safe }};
+    const promedioHistorico = {{ promedio_historico|safe }};
+    
+    const oportunidadIndices = {{ oportunidad_indices|safe }};
+    const ctx = document.getElementById('chartOportunidad').getContext('2d');
+    // Crea un array de colores para los puntos históricos
+    const pointColors = dataHistorico.map((v, i) => oportunidadIndices.includes(i) ? 'green' : 'blue');
+    const pointRadius = dataHistorico.map((v, i) => oportunidadIndices.includes(i) ? 7 : 3);
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Histórico',
+                    data: dataHistorico,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    fill: false,
+                    tension: 0.1,
+                    pointBackgroundColor: pointColors,
+                    pointRadius: pointRadius,
+                    pointStyle: dataHistorico.map((v, i) => oportunidadIndices.includes(i) ? 'circle' : 'circle'),
+                    showLine: true
+                },
+                {
+                    label: 'Predicción',
+                    data: dataPrediccion,
+                    borderColor: 'orange',
+                    backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                    fill: false,
+                    borderDash: [5, 5],
+                    tension: 0.1
+                },
+                {
+                    label: 'Promedio Histórico',
+                    data: promedioHistorico,
+                    borderColor: 'green',
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false,
+                    borderDash: [2,2],
+                    type: 'line',
+                    order: 0
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: 'x',
+                    }
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            scales: {
+                x: {
+                    ticks: {
+                        autoSkip: false
+                    }
+                },
+                y: { beginAtZero: false }
+            }
+        }
+    });
+</script>
+{% endblock %}

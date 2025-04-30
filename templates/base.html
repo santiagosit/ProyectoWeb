@@ -65,6 +65,7 @@
                                 <li><a class="dropdown-item" href="{% url 'reporte_inventario' %}">Reporte de Inventario</a></li>
                                 <li><a class="dropdown-item" href="{% url 'exportar_reporte_excel' %}">Descargar Reporte en Excel</a></li>
                                 <li><a class="dropdown-item" href="{% url 'reporte_ingresos_egresos' %}">Estadísticas</a></li>
+<li><a class="dropdown-item" href="{% url 'predicciones:oportunidad_compra' %}">Oportunidad de Compra (Predicción de Precios)</a></li>
                             </ul>
                         </li>
 
@@ -121,6 +122,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'predicciones:dashboard' %}">Dashboard de Predicciones</a></li>
+<li><a class="dropdown-item" href="{% url 'predicciones:oportunidad_compra' %}">Oportunidad de Compra (Predicción de Precios)</a></li>
                             </ul>
                         </li>
                         {% endif %}
