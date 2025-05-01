@@ -6,23 +6,37 @@
     <div class="section-cards">
         <div class="card">
             <h3>Datos Actuales</h3>
-            <div class="card-content">
-                <p><strong>Cliente:</strong> {{ evento.cliente.nombre }}</p>
-                <p><strong>Teléfono:</strong> {{ evento.cliente.telefono }}</p>
-                <p><strong>Email:</strong> {{ evento.cliente.email }}</p>
-                <p><strong>Descripción:</strong> {{ evento.descripcion }}</p>
-                <p><strong>Fecha:</strong> {{ evento.fecha_evento }}</p>
+            <div class="confirmation-data">
+                <dl>
+                    <dt>Cliente:</dt>
+                    <dd>{{ evento.cliente.nombre }}</dd>
+                    <dt>Teléfono:</dt>
+                    <dd>{{ evento.cliente.telefono }}</dd>
+                    <dt>Email:</dt>
+                    <dd>{{ evento.cliente.email }}</dd>
+                    <dt>Descripción:</dt>
+                    <dd>{{ evento.descripcion }}</dd>
+                    <dt>Fecha:</dt>
+                    <dd>{{ evento.fecha_evento }}</dd>
+                </dl>
             </div>
         </div>
         
         <div class="card">
             <h3>Nuevos Datos</h3>
-            <div class="card-content">
-                <p><strong>Cliente:</strong> {{ new_data.nombre }}</p>
-                <p><strong>Teléfono:</strong> {{ new_data.telefono }}</p>
-                <p><strong>Email:</strong> {{ new_data.email }}</p>
-                <p><strong>Descripción:</strong> {{ new_data.descripcion }}</p>
-                <p><strong>Fecha:</strong> {{ new_data.fecha_evento }}</p>
+            <div class="confirmation-data">
+                <dl>
+                    <dt>Cliente:</dt>
+                    <dd>{{ new_data.nombre }}</dd>
+                    <dt>Teléfono:</dt>
+                    <dd>{{ new_data.telefono }}</dd>
+                    <dt>Email:</dt>
+                    <dd>{{ new_data.email }}</dd>
+                    <dt>Descripción:</dt>
+                    <dd>{{ new_data.descripcion }}</dd>
+                    <dt>Fecha:</dt>
+                    <dd>{{ new_data.fecha_evento }}</dd>
+                </dl>
             </div>
         </div>
     </div>
