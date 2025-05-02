@@ -6,6 +6,7 @@
     <title>{% block title %}Club Social La Cabañita - Autenticación{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/estilos_auth.css' %}">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'css/messages.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -13,8 +14,20 @@
         <div class="auth-logo">
             <h1>Club Social La Cabañita </h1>
         </div>
+        <div class="messages messages-inline">
+            {% if messages %}
+                <ul class="messages-list">
+                    {% for message in messages %}
+                        <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
         <div class="auth-card">
-            {% block auth_content %}{% endblock %}
+            
+            {% block auth_content %}
+            
+            {% endblock %}
         </div>
         <div class="auth-footer">
             <p>&copy; 2024 Club social la cabañita </p>

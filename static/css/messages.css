@@ -1,0 +1,44 @@
+.messages {
+    margin: 0 0 1rem 0;
+    padding: 0;
+    list-style: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.messages li {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.messages li:last-child {
+    border-bottom: none;
+}
+.messages li.error, .messages li.danger {
+    background: rgba(213, 0, 0, 0.09);
+    color: var(--danger-color);
+    border-left: 5px solid var(--danger-color);
+}
+.messages li.success {
+    background: rgba(0, 200, 83, 0.09);
+    color: var(--success-color);
+    border-left: 5px solid var(--success-color);
+}
+.messages li.warning {
+    background: rgba(255, 160, 0, 0.09);
+    color: var(--warning-color);
+    border-left: 5px solid var(--warning-color);
+}
+.messages li.info {
+    background: rgba(33, 150, 243, 0.09);
+    color: var(--accent-color);
+    border-left: 5px solid var(--accent-color);
+}
