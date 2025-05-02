@@ -38,9 +38,24 @@ def login_view(request):
 
 def iniciar_sesion(request):
     """Vista para procesar el inicio de sesión"""
+    import requests  # Asegura que requests esté importado
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        captcha_response = request.POST.get('cf-turnstile-response')
+        captcha_valid = False
+        if captcha_response:
+            data = {
+                'secret': '0x4AAAAAABZGkfkDg9tcCC-UmNR8p3DGYWc',  # Poner tu secret key de Cloudflare Turnstile
+                'response': captcha_response,
+                'remoteip': request.META.get('REMOTE_ADDR')
+            }
+            r = requests.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', data=data)
+            captcha_valid = r.json().get('success', False)
+        if not captcha_valid:
+            from django.contrib import messages
+            messages.error(request, 'Verificación captcha fallida. Intenta de nuevo.')
+            return render(request, 'usuarios/login.html')
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
@@ -264,7 +279,7 @@ def listar_administradores(request):
     if nombre:
         administradores = administradores.filter(nombre_completo__icontains=nombre)
     if email:
-        administradores = administradores.filter(user__email__icontains(email))
+        administradores = administradores.filter(user__email__icontains=email)
     if telefono:
         administradores = administradores.filter(telefono__icontains(telefono))
 
@@ -481,7 +496,7 @@ def listar_empleados(request):
     if nombre:
         empleados = empleados.filter(nombre_completo__icontains=nombre)
     if email:
-        empleados = empleados.filter(user__email__icontains(email))
+        empleados = empleados.filter(user__email__icontains=email)
     if telefono:
         empleados = empleados.filter(telefono__icontains(telefono))
     if fecha_desde:
@@ -715,8 +730,3 @@ def enviar_pin(request):
             return render(request, 'usuarios/recuperar.html', {'error': 'Por favor, introduce un correo electrónico.'})
 
     return render(request, 'usuarios/recuperar.html')
-
-
-
-
-
