@@ -1,6 +1,8 @@
 # Importaciones de Python
 from pyexpat.errors import messages
 import random
+from django.utils import timezone
+
 
 # Importaciones de Django
 from django.contrib.auth import authenticate, login, logout
@@ -8,13 +10,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 from django.core.mail import send_mail
 from django.db import transaction, IntegrityError  # Add IntegrityError here
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils.timezone import localdate, now
 from django.utils.crypto import get_random_string
 from django.urls import reverse
-from django.contrib import messages
 from django.db.models import Sum, F, Count  # Change this import
 from decimal import Decimal
 
@@ -38,9 +40,27 @@ def login_view(request):
 
 def iniciar_sesion(request):
     """Vista para procesar el inicio de sesión"""
+    import requests  # Asegura que requests esté importado
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        
+        # --- CAPTCHA Cloudflare Turnstile (comentado para desarrollo local) ---
+        #captcha_response = request.POST.get('cf-turnstile-response')
+        #captcha_valid = False
+        #if captcha_response:
+            #data = {
+                #'secret': '0x4AAAAAABZGkfkDg9tcCC-UmNR8p3DGYWc',
+                #'response': captcha_response,
+                #'remoteip': request.META.get('REMOTE_ADDR')
+            #}
+            #r = requests.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', data=data)
+            #captcha_valid = r.json().get('success', False)
+        #if not captcha_valid:
+            #messages.error(request, 'Verificación captcha fallida. Intenta de nuevo.')
+            #return render(request, 'usuarios/login.html')
+        # --- FIN CAPTCHA ---
+        
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
@@ -264,7 +284,7 @@ def listar_administradores(request):
     if nombre:
         administradores = administradores.filter(nombre_completo__icontains=nombre)
     if email:
-        administradores = administradores.filter(user__email__icontains(email))
+        administradores = administradores.filter(user__email__icontains=email)
     if telefono:
         administradores = administradores.filter(telefono__icontains(telefono))
 
@@ -481,7 +501,7 @@ def listar_empleados(request):
     if nombre:
         empleados = empleados.filter(nombre_completo__icontains=nombre)
     if email:
-        empleados = empleados.filter(user__email__icontains(email))
+        empleados = empleados.filter(user__email__icontains=email)
     if telefono:
         empleados = empleados.filter(telefono__icontains(telefono))
     if fecha_desde:
@@ -597,7 +617,7 @@ def recuperar_password(request):
             pin_code = get_random_string(6, allowed_chars='0123456789')
 
             # Crear o actualizar el PIN del usuario
-            PIN.objects.update_or_create(user=user, defaults={'pin': pin_code})
+            PIN.objects.update_or_create(user=user, defaults={'pin': pin_code, 'created_at': timezone.now()})
 
             # Enviar el PIN al correo usando Amazon SES
             send_mail(
@@ -613,55 +633,77 @@ def recuperar_password(request):
 
     return render(request, 'usuarios/recuperar.html')
 
+def enviar_pin(request):
+    """Envía el PIN de recuperación por correo electrónico"""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        if email:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                messages.error(request, 'El correo no se encuentra registrado')
+                return render(request, 'usuarios/recuperar.html')
+            # Generar un nuevo PIN
+            pin_code = get_random_string(6, allowed_chars='0123456789')
+
+            # Crear o actualizar el PIN del usuario
+            PIN.objects.update_or_create(user=user, defaults={'pin': pin_code, 'created_at': timezone.now()})
+
+            # Enviar el PIN al correo usando Amazon SES
+            send_mail(
+                'Recuperación de Contraseña',
+                f'Tu PIN de recuperación es: {pin_code}',
+                'santiagoproyectosemail@gmail.com',  # Dirección de correo desde la que se envía
+                [user.email],  # Dirección de correo del usuario que recibe el PIN
+                fail_silently=False,
+            )
+            return redirect('verificar_pin')
+        else:
+            messages.error(request, 'Por favor, introduce un correo electrónico.')
+            return render(request, 'usuarios/recuperar.html')
+    return render(request, 'usuarios/recuperar.html')
+
 def verificar_pin(request):
     """Vista para verificar el PIN de recuperación"""
     if request.method == "POST":
-        if 'email' in request.POST and 'pin' in request.POST:
-            email = request.POST.get("email")
-            pin = request.POST.get("pin")
-
+        if 'pin' in request.POST and 'email' in request.POST:
+            email = request.POST.get('email')
+            pin = request.POST.get('pin')
             if email and pin:
                 try:
                     user = User.objects.get(email=email)
-                    pin_object = PIN.objects.get(user=user, pin=pin)
-
-                    if pin_object.is_valid():
+                    pin_obj = PIN.objects.get(user=user, pin=pin)
+                    if pin_obj and not pin_obj.is_expired():
                         return render(request, 'usuarios/verificar_pin.html', {'email': email, 'valid_pin': True})
-
                     else:
-                        return render(request, 'usuarios/verificar_pin.html', {'error': 'El PIN ha expirado.'})
-
+                        messages.error(request, 'PIN o correo no válido.')
+                        return render(request, 'usuarios/verificar_pin.html')
                 except (User.DoesNotExist, PIN.DoesNotExist):
-                    return render(request, 'usuarios/verificar_pin.html', {'error': 'Correo o PIN incorrecto.'})
-
-            return render(request, 'usuarios/verificar_pin.html', {'error': 'Por favor, completa todos los campos.'})
-
+                    messages.error(request, 'PIN o correo no válido.')
+                    return render(request, 'usuarios/verificar_pin.html')
+            else:
+                messages.error(request, 'Por favor, completa todos los campos.')
+                return render(request, 'usuarios/verificar_pin.html')
         elif 'new_password' in request.POST:
             new_password = request.POST.get('new_password')
             email = request.POST.get('email')
-
             if new_password and email:
                 try:
                     user = User.objects.get(email=email)
-                    # Validar la nueva contraseña usando las validaciones de Django
                     try:
                         validate_password(new_password, user)
                         user.set_password(new_password)
                         user.save()
-                        return render(request, 'usuarios/verificar_pin.html',
-                                      {'success': 'Contraseña cambiada exitosamente.', 'valid_pin': False})
+                        return render(request, 'usuarios/verificar_pin.html', {'success': 'Contraseña cambiada exitosamente.', 'valid_pin': False})
                     except ValidationError as e:
-                        return render(request, 'usuarios/verificar_pin.html',
-                                      {'error': e.messages, 'valid_pin': True, 'email': email})
-
+                        messages.error(request, e.messages[0] if e.messages else 'Contraseña no válida.')
+                        return render(request, 'usuarios/verificar_pin.html', {'valid_pin': True, 'email': email})
                 except User.DoesNotExist:
-                    return render(request, 'usuarios/verificar_pin.html',
-                                  {'error': 'Usuario no encontrado.', 'valid_pin': True, 'email': email})
-
+                    messages.error(request, 'PIN o correo no válido.')
+                    return render(request, 'usuarios/verificar_pin.html', {'valid_pin': True, 'email': email})
             else:
-                return render(request, 'usuarios/verificar_pin.html',
-                              {'error': 'Por favor, ingresa una nueva contraseña.', 'valid_pin': True, 'email': email})
-
+                messages.error(request, 'Por favor, ingresa una nueva contraseña.')
+                return render(request, 'usuarios/verificar_pin.html', {'valid_pin': True, 'email': email})
     return render(request, 'usuarios/verificar_pin.html')
 
 def reset_password(request, email):
@@ -685,38 +727,3 @@ def reset_password(request, email):
 def generar_pin():
     """Genera un PIN aleatorio de 6 dígitos"""
     return str(random.randint(100000, 999999))
-
-def enviar_pin(request):
-    """Envía el PIN de recuperación por correo electrónico"""
-    if request.method == "POST":
-        email = request.POST.get("email")
-        if email:
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return render(request, 'usuarios/recuperar.html', {'error': 'El correo no está registrado.'})
-
-            # Generar un nuevo PIN
-            pin_code = get_random_string(6, allowed_chars='0123456789')
-
-            # Crear o actualizar el PIN del usuario
-            PIN.objects.update_or_create(user=user, defaults={'pin': pin_code})
-
-            # Enviar el PIN al correo usando Amazon SES
-            send_mail(
-                'Recuperación de Contraseña',
-                f'Tu PIN de recuperación es: {pin_code}',
-                'santiagoproyectosemail@gmail.com',  # Dirección de correo desde la que se envía
-                [user.email],  # Dirección de correo del usuario que recibe el PIN
-                fail_silently=False,
-            )
-            return redirect('verificar_pin')
-        else:
-            return render(request, 'usuarios/recuperar.html', {'error': 'Por favor, introduce un correo electrónico.'})
-
-    return render(request, 'usuarios/recuperar.html')
-
-
-
-
-

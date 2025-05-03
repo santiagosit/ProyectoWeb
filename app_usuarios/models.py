@@ -55,3 +55,9 @@ class PIN(models.Model):
     def is_valid(self):
         """Valida que el PIN no tenga más de 10 minutos."""
         return True
+
+    def is_expired(self):
+        """Verifica si el PIN tiene más de 10 minutos de antigüedad."""
+        from django.utils import timezone
+        expiration_time = self.created_at + timezone.timedelta(minutes=10)
+        return timezone.now() > expiration_time

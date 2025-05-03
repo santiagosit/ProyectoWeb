@@ -14,11 +14,10 @@ from decimal import Decimal
 @login_required
 @user_passes_test(is_employee_or_above)
 def listar_pedidos(request):
-    pedidos = Pedido.objects.all()
+    pedidos = Pedido.objects.all().order_by('-fecha_pedido') # Ordenar por fecha descendente
     
     # Aplicar filtros si existen
     filters = {
-        'id': request.GET.get('id'),
         'proveedor_id': request.GET.get('proveedor'),
         'fecha_pedido': request.GET.get('fecha'),
         'estado': request.GET.get('estado'),
