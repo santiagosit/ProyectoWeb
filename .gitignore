@@ -1,6 +1,8 @@
 # Python
 *.pyc
 __pycache__/
+*.py[cod]
+*$py.class
 
 # Entornos virtuales
 env/
@@ -20,3 +22,8 @@ venv/
 # Archivos de tu editor
 .idea/
 .vscode/
+
+# Django
+*.log
+*.pot
+*.pyc
