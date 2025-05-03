@@ -154,7 +154,7 @@ def eliminar_producto(request, producto_id):
     # Verificar si tiene relaciones para mostrar advertencia anticipada
     tiene_relaciones = False
     if producto.ventadetalle_set.exists() or producto.pedidodetalle_set.exists() or \
-       producto.ventas_reportes.exists() or producto.predicciones_negocio.exists():
+       producto.ventas_reportes.exists():
         tiene_relaciones = True
     
     productos_bajo_stock = get_productos_bajo_stock()

@@ -18,7 +18,6 @@
             {% if producto.ventadetalle_set.exists %}<li><b>Tiene ventas asociadas</b></li>{% endif %}
             {% if producto.pedidodetalle_set.exists %}<li><b>Tiene pedidos asociados</b></li>{% endif %}
             {% if producto.ventas_reportes.exists %}<li><b>Tiene reportes vinculados</b></li>{% endif %}
-            {% if producto.predicciones_negocio.exists %}<li><b>Tiene predicciones relacionadas</b></li>{% endif %}
         </ul>
         <div style="margin-top: 0.8rem; font-size: 1em;"><b>Recomendación:</b> Edita el producto y márcalo como "inactivo" o "sin stock".</div>
     </div>
