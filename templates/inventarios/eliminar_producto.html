@@ -8,13 +8,41 @@
 {% endblock %}
 
 {% block content %}
-<div class="wrapper">
-    <h1>Eliminar Producto</h1>
-    <p>¿Estás seguro de que deseas eliminar el producto "{{ producto.nombre }}"?</p>
-    <form method="post">
+<div style="max-width: 520px; margin: 2.5rem auto 1.5rem auto; padding: 2.5rem 2.2rem 2rem 2.2rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 16px rgba(30,40,90,0.07); border: 1px solid #e0e0e0;">
+    <h2 style="color: #d50000; text-align:center; margin-bottom: 0.5rem; font-size: 2rem;">Confirmar Eliminación</h2>
+    <h4 style="text-align:center; margin-bottom: 1.6rem; color: #283593;">¿Estás seguro que deseas eliminar el producto <b>"{{ producto.nombre }}"</b>?</h4>
+    {% if tiene_relaciones %}
+    <div style="background: #ffeaea; border: 1.5px solid #d50000; color: #a70000; padding: 1.1rem 1.5rem 1.1rem 2.2rem; border-radius: 7px; margin-bottom: 1.4rem;">
+        <span style="font-weight: bold; font-size: 1.13em;"><i class="fas fa-exclamation-triangle"></i> ¡No se puede eliminar!</span>
+        <ul style="margin: 0.7rem 0 0.7rem 1.2rem; padding-left:1.2rem;">
+            {% if producto.ventadetalle_set.exists %}<li><b>Tiene ventas asociadas</b></li>{% endif %}
+            {% if producto.pedidodetalle_set.exists %}<li><b>Tiene pedidos asociados</b></li>{% endif %}
+            {% if producto.ventas_reportes.exists %}<li><b>Tiene reportes vinculados</b></li>{% endif %}
+            {% if producto.predicciones_negocio.exists %}<li><b>Tiene predicciones relacionadas</b></li>{% endif %}
+        </ul>
+        <div style="margin-top: 0.8rem; font-size: 1em;"><b>Recomendación:</b> Edita el producto y márcalo como "inactivo" o "sin stock".</div>
+    </div>
+    {% else %}
+    <div style="background: #ffeaea; border: 1.5px solid #d50000; color: #a70000; padding: 1.1rem 1.5rem 1.1rem 2.2rem; border-radius: 7px; margin-bottom: 1.4rem;">
+        <span style="font-weight: bold; font-size: 1.13em;"><i class="fas fa-exclamation-triangle"></i> ¡Advertencia extrema!</span>
+        <ul style="margin: 0.7rem 0 0.7rem 1.2rem; padding-left:1.2rem;">
+            <li><b>Se eliminará este producto, esta seguro?</b></li>
+            <li><b>Lo recomendable es editar el producto y dejarlo sin stock</b></li>
+        </ul>
+        <div style="margin-top: 0.8rem; font-size: 1em;">Para eliminarlo definitivamente, escribe exactamente la frase de desafío:</div>
+        <div style="background: #fff; border: 1px dashed #bdbdbd; color: #333; padding: 0.6em 1.1em; border-radius: 5px; margin: 0.6rem auto 0.4rem auto; text-align:center; display:inline-block; font-size:1.07em;"><code>Eliminar "{{ producto.nombre }}"</code></div>
+    </div>
+    <form method="post" style="margin: 0 auto; max-width: 340px;">
         {% csrf_token %}
-        <button type="submit" class="btn">Eliminar</button>
+        <div style="margin-bottom: 1.1rem;">
+            <label for="frase_confirmacion" style="font-weight: bold; margin-bottom: 0.3rem; display:block;">Frase de confirmación:</label>
+            <input type="text" name="frase_confirmacion" id="frase_confirmacion" class="form-control" placeholder="Escribe la frase exacta para eliminar" style="width:100%; min-width:0;">
+        </div>
+        <div style="display: flex; justify-content: center; gap: 1.2rem;">
+            <button type="submit" class="btn btn-danger" style="min-width: 160px;">Eliminar definitivamente</button>
+            <a href="{% url 'listar_productos' %}" class="btn btn-secondary" style="min-width: 120px;">Cancelar</a>
+        </div>
     </form>
-    <a href="{% url 'listar_productos' %}" class="btn">Cancelar</a>
+    {% endif %}
 </div>
 {% endblock %}

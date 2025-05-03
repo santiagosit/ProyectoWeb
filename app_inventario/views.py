@@ -2,6 +2,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import ProtectedError
+from django.db.models.deletion import ProtectedError
 
 # Local imports
 from .models import Producto
@@ -134,14 +136,31 @@ def modificar_producto(request, producto_id):
 @user_passes_test(is_admin_or_superuser)
 def eliminar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
+    frase_desafio = f'Eliminar "{producto.nombre}"'
+    
     if request.method == 'POST':
-        producto.delete()
-        messages.success(request, 'Producto eliminado exitosamente.')
-        return redirect('listar_productos')
-
+        frase_confirmacion = request.POST.get('frase_confirmacion', '').strip()
+        if frase_confirmacion == frase_desafio:
+            try:
+                producto.delete()
+                messages.success(request, 'Producto eliminado exitosamente.')
+                return redirect('listar_productos')
+            except ProtectedError:
+                messages.error(request, 'No se puede eliminar: el producto tiene ventas, pedidos u otros registros asociados.')
+                return redirect('listar_productos')
+        else:
+            messages.error(request, f'Debes escribir exactamente la frase: {frase_desafio}')
+    
+    # Verificar si tiene relaciones para mostrar advertencia anticipada
+    tiene_relaciones = False
+    if producto.ventadetalle_set.exists() or producto.pedidodetalle_set.exists() or \
+       producto.ventas_reportes.exists() or producto.predicciones_negocio.exists():
+        tiene_relaciones = True
+    
     productos_bajo_stock = get_productos_bajo_stock()
     return render(request, 'inventarios/eliminar_producto.html', {
         'producto': producto,
+        'tiene_relaciones': tiene_relaciones,
         'productos_bajo_stock': productos_bajo_stock,
         'num_notificaciones': len(productos_bajo_stock)
     })
