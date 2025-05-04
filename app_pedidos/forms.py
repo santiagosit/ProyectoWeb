@@ -4,9 +4,13 @@ from .models import Pedido, PedidoDetalle, Proveedor
 class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
-        fields = ['proveedor', 'observaciones']
+        fields = ['proveedor', 'fecha_pedido', 'observaciones']
         widgets = {
             'proveedor': forms.Select(attrs={'class': 'form-control'}),
+            'fecha_pedido': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
             'observaciones': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,

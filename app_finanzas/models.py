@@ -37,10 +37,10 @@ class Egreso(models.Model):
     ]
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, default='pedido')
     pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE, related_name='egreso', null=True, blank=True)
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha = models.DateTimeField()
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     descripcion = models.TextField()
-    categoria = models.CharField(max_length=100, default='Pedido')  # Categoría personalizada
+    categoria = models.CharField(max_length=100, default='Pedido')
 
     def __str__(self):
         return f'Egreso - {self.tipo.capitalize()} - {self.monto}'

@@ -19,7 +19,7 @@ class Proveedor(models.Model):
 
 class Pedido(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
-    fecha_pedido = models.DateField(auto_now_add=True)
+    fecha_pedido = models.DateField()
     estado = models.CharField(max_length=20, choices=[
         ('pedido', 'Pedido'),
         ('en camino', 'En camino'),
@@ -54,7 +54,3 @@ class PedidoDetalle(models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} - {self.cantidad} unidades"
-
-
-
-

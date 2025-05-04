@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
+from django.utils import timezone
 
 # Local imports
 from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
@@ -81,7 +82,12 @@ def registrar_pedido(request):
     if request.method == 'POST':
         pedido_form = PedidoForm(request.POST)
         if pedido_form.is_valid():
-            pedido = pedido_form.save()
+            pedido = pedido_form.save(commit=False)
+            
+            # If no date provided, use today's date
+            if not pedido.fecha_pedido:
+                pedido.fecha_pedido = timezone.now().date()
+            pedido.save()
             
             # Obtener los datos de los productos
             productos = request.POST.getlist('productos[]')
@@ -192,9 +198,30 @@ def actualizar_estado_pedido(request, pedido_id):
             
             if nuevo_estado == 'recibido':
                 # Actualizar stock cuando el pedido se marca como recibido
-                for detalle in pedido.detalles.all():  # Changed from pedido.detalles()
+                for detalle in pedido.detalles.all():
                     detalle.actualizar_stock()
-                messages.success(request, 'Pedido marcado como recibido y stock actualizado.')
+                
+                # Crear egreso con fecha del día siguiente al pedido
+                from datetime import datetime, timedelta
+                from django.utils.timezone import make_aware
+                from app_finanzas.models import Egreso
+
+                if not hasattr(pedido, 'egreso'):
+                    fecha_egreso = make_aware(datetime.combine(pedido.fecha_pedido + timedelta(days=1), datetime.min.time()))
+                    print('Fecha del pedido:', pedido.fecha_pedido)
+                    print('Fecha esperada del egreso:', fecha_egreso)
+
+                    Egreso.objects.create(
+                        tipo='pedido',
+                        pedido=pedido,
+                        monto=pedido.total,
+                        descripcion=f'Egreso por pedido #{pedido.id}',
+                        fecha=fecha_egreso
+                    )
+                    messages.success(request, 'Pedido marcado como recibido, stock actualizado y egreso creado.')
+                else:
+                    messages.success(request, 'Pedido marcado como recibido y stock actualizado (egreso ya existía).')
+
             else:
                 messages.success(request, 'Estado del pedido actualizado exitosamente.')
                 
