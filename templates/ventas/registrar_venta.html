@@ -103,7 +103,22 @@
     <div class="actions mt-4">
         <form method="post" class="form-confirmar">
             {% csrf_token %}
-            <button type="submit" name="confirmar_venta" 
+            {% if venta_form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+        {% for field, errors in venta_form.errors.items %}
+            {% for error in errors %}
+                <li>{{ field|capfirst }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+<div class="form-group">
+    <label for="id_fecha">Fecha de la venta:</label>
+    {{ venta_form.fecha }}
+</div>
+<button type="submit" name="confirmar_venta" 
                     class="btn btn-success" 
                     {% if not productos_venta %}disabled{% endif %}>
                 <i class="fas fa-check"></i> Confirmar Venta

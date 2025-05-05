@@ -3,6 +3,7 @@ from django.db.models import Sum, F
 from decimal import Decimal
 from app_inventario.models import Producto
 from app_usuarios.models import Profile
+from django.utils import timezone
 
 class Venta(models.Model):
     ESTADO_CHOICES = [
@@ -25,6 +26,7 @@ class Venta(models.Model):
         null=True,
         blank=True
     )
+    fecha = models.DateTimeField("Fecha de la venta", default=timezone.now)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_modificacion = models.DateTimeField(auto_now=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')

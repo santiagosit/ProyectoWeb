@@ -8,6 +8,11 @@ VentaDetalleFormSet = forms.inlineformset_factory(
 
 
 class VentaForm(forms.ModelForm):
+    fecha = forms.DateTimeField(
+        label="Fecha de la venta",
+        input_formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'})
+    )
     class Meta:
         model = Venta
-        fields = ['observaciones']
+        fields = ['fecha', 'observaciones']

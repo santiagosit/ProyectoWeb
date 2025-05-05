@@ -11,7 +11,7 @@
         
         <div class="confirmation-content">
             <div class="event-details">
-                <p><strong>Fecha:</strong> {{ venta.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
                 <p><strong>Estado:</strong> 
                     <span class="badge {% if venta.estado == 'completada' %}badge-success{% else %}badge-warning{% endif %}">
                         {{ venta.get_estado_display }}

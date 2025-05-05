@@ -88,7 +88,7 @@
             <tbody>
                 {% for venta in ventas %}
                 <tr>
-                    <td>{{ venta.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                    <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
                     <td>{{ venta.empleado.nombre_completo }}</td>
                     <td>
                         <span class="badge {% if venta.estado == 'completada' %}badge-success

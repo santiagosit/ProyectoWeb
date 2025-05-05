@@ -3,7 +3,7 @@ from django.core.validators import DecimalValidator
 from decimal import Decimal
 from app_ventas.models import Venta
 from app_pedidos.models import Pedido
-
+from django.utils import timezone
 class Ingreso(models.Model):
     TIPO_CHOICES = [
         ('venta', 'Venta'),
@@ -12,7 +12,7 @@ class Ingreso(models.Model):
     
     venta = models.OneToOneField('app_ventas.Venta', on_delete=models.CASCADE, null=True, blank=True)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha = models.DateTimeField("Fecha del ingreso", default=timezone.now)
     descripcion = models.TextField(blank=True, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='venta')
 

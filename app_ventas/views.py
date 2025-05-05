@@ -118,6 +118,7 @@ def registrar_venta(request):
 
         productos = Producto.objects.filter(cantidad_stock__gt=0)
         productos_venta = request.session.get('productos_venta', [])  # Define productos_venta here
+        venta_form = VentaForm(request.POST or None)
         
         if request.method == 'POST':
             # Agregar producto
@@ -153,27 +154,30 @@ def registrar_venta(request):
                     messages.error(request, 'No hay productos en la venta')
                     return redirect('registrar_venta')
 
+                venta_form = VentaForm(request.POST)
+                if not venta_form.is_valid():
+                    messages.error(request, 'Corrija los errores del formulario.')
+                    return redirect('registrar_venta')
                 try:
                     with transaction.atomic():
                         total = Decimal(request.session.get('venta_total', '0'))
-                        
+                        fecha_venta = venta_form.cleaned_data['fecha']
                         # Crear la venta
                         venta = Venta.objects.create(
                             empleado=request.user.profile,
                             estado='pendiente',
-                            total=total
+                            total=total,
+                            fecha=fecha_venta,
+                            observaciones=venta_form.cleaned_data.get('observaciones', '')
                         )
-
                         # Crear los detalles (el modelo se encargará del stock)
                         for item in productos_venta:
                             producto = Producto.objects.get(id=item['producto_id'])
                             cantidad = int(item['cantidad'])
                             precio_unitario = Decimal(item['precio_unitario'])
-                            
                             # Verificar stock antes de crear el detalle
                             if producto.cantidad_stock < cantidad:
                                 raise ValueError(f'Stock insuficiente para {producto.nombre}')
-                            
                             VentaDetalle.objects.create(
                                 venta=venta,
                                 producto=producto,
@@ -181,20 +185,22 @@ def registrar_venta(request):
                                 precio_unitario=precio_unitario,
                                 precio_total=Decimal(item['subtotal'])
                             )
-
-                        # Completar venta
+                        # Forzar guardar la fecha personalizada
+                        venta.fecha = fecha_venta
+                        venta.save()
+                        # Completar venta y crear ingreso con la misma fecha
                         venta.completar_venta()
-
+                        if hasattr(venta, 'ingreso'):
+                            venta.ingreso.fecha = fecha_venta
+                            venta.ingreso.save()
                         # Limpiar sesión
                         request.session['productos_venta'] = []
                         request.session['venta_total'] = '0'
                         request.session.modified = True
-                        
                         messages.success(request, 'Venta registrada exitosamente')
                         if request.user.profile.rol == 'Empleado':
                             return redirect('detalle_venta', venta_id=venta.id)
                         return redirect('listar_ventas')
-
                 except Exception as e:
                     messages.error(request, f'Error al procesar la venta: {str(e)}')
                     return redirect('registrar_venta')
@@ -202,7 +208,8 @@ def registrar_venta(request):
         context = {
             'productos': productos,
             'productos_venta': productos_venta,
-            'total': Decimal(request.session.get('venta_total', '0'))
+            'total': Decimal(request.session.get('venta_total', '0')),
+            'venta_form': venta_form
         }
         return render(request, 'ventas/registrar_venta.html', context)
 
@@ -288,7 +295,7 @@ def detalle_venta(request, venta_id):
 
 @login_required
 def listar_ventas(request):
-    ventas = Venta.objects.all().order_by('-fecha_creacion')
+    ventas = Venta.objects.all().order_by('-fecha')
 
     # Filtros
     empleado_id = request.GET.get('empleado')
@@ -298,7 +305,7 @@ def listar_ventas(request):
     if empleado_id:
         ventas = ventas.filter(empleado_id=empleado_id)
     if fecha:
-        ventas = ventas.filter(fecha_creacion__date=fecha)
+        ventas = ventas.filter(fecha__date=fecha)
     if estado:
         ventas = ventas.filter(estado=estado)
 
@@ -417,10 +424,10 @@ def mis_ventas(request):
     # Get employee's sales
     ventas = Venta.objects.filter(
         empleado=request.user.profile
-    ).order_by('-fecha_creacion')
+    ).order_by('-fecha')
 
     # Calculate today's stats
-    ventas_hoy = ventas.filter(fecha_creacion__date=today)
+    ventas_hoy = ventas.filter(fecha__date=today)
     total_ventas_hoy = ventas_hoy.aggregate(
         total=Sum('total')
     )['total'] or 0

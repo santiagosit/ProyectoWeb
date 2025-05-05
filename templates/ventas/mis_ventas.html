@@ -31,7 +31,7 @@
             <tbody>
                 {% for venta in ventas %}
                 <tr>
-                    <td>{{ venta.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                    <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
                     <td>${{ venta.total|floatformat:2 }}</td>
                     <td>
                         <span class="badge {% if venta.estado == 'completada' %}bg-success{% else %}bg-warning{% endif %}">

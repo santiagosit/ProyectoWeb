@@ -13,7 +13,7 @@
             <div class="event-details">
                 <p><strong>ID Venta:</strong> #{{ venta.id }}</p>
                 <p><strong>Empleado:</strong> {{ venta.empleado }}</p>
-                <p><strong>Fecha de creación:</strong> {{ venta.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                <p><strong>Fecha de creación:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
                 <p><strong>Estado:</strong> {{ venta.estado|title }}</p>
                 <p><strong>Total:</strong> ${{ venta.total|floatformat:2 }}</p>
                 <p><strong>Observaciones:</strong> {{ venta.observaciones|default:'-' }}</p>
