@@ -19,7 +19,7 @@ def get_eventos_proximos():
 
 
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def listar_eventos(request):
     eventos = Evento.objects.all().order_by('-fecha_evento')
     
@@ -43,7 +43,7 @@ def listar_eventos(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def crear_evento(request):
     if request.method == 'POST':
         try:
@@ -72,7 +72,7 @@ def crear_evento(request):
     return render(request, 'eventos/crear_evento.html')
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def editar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     
@@ -85,7 +85,7 @@ def editar_evento(request, evento_id):
     return render(request, 'eventos/editar_evento.html', {'evento': evento})
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def confirmar_edicion_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     
@@ -118,7 +118,7 @@ def confirmar_edicion_evento(request, evento_id):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     

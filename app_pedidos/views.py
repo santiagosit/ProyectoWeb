@@ -12,7 +12,7 @@ from decimal import Decimal
 
 # Protected views - Employee level access
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def listar_pedidos(request):
     pedidos = Pedido.objects.all().order_by('-fecha_pedido') # Ordenar por fecha descendente
     
@@ -44,7 +44,7 @@ def listar_pedidos(request):
 
 # Protected views - Admin level access
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_proveedores(request):
     proveedores = Proveedor.objects.all()
 
@@ -76,7 +76,7 @@ def listar_proveedores(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def registrar_pedido(request):
     if request.method == 'POST':
         pedido_form = PedidoForm(request.POST)
@@ -121,7 +121,7 @@ def registrar_pedido(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def registrar_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
@@ -138,7 +138,7 @@ def registrar_proveedor(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def editar_proveedor(request, proveedor_id):
     proveedor = get_object_or_404(Proveedor, id=proveedor_id)
     
@@ -160,7 +160,7 @@ def editar_proveedor(request, proveedor_id):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_proveedor(request, proveedor_id):
     proveedor = get_object_or_404(Proveedor, id=proveedor_id)
     
@@ -176,7 +176,7 @@ def eliminar_proveedor(request, proveedor_id):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def actualizar_estado_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
     
@@ -205,7 +205,7 @@ def actualizar_estado_pedido(request, pedido_id):
 
 # Utility views
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def detalles_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
     detalles = pedido.detalles.all()

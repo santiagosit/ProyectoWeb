@@ -228,7 +228,7 @@ def empleado_dashboard(request):
 
 # Vistas de gestión de administradores
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def crear_administrador(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)
@@ -278,7 +278,7 @@ def crear_administrador(request):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_administradores(request):
     administradores = Profile.objects.filter(
         rol='Administrador',
@@ -302,7 +302,7 @@ def listar_administradores(request):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def editar_administrador(request, admin_id):
     admin = get_object_or_404(Profile, id=admin_id)
     
@@ -332,7 +332,7 @@ def editar_administrador(request, admin_id):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def confirmar_edicion_admin(request, admin_id):
     admin = get_object_or_404(Profile, id=admin_id)
     new_data = request.session.get('admin_edit_data', {})
@@ -374,7 +374,7 @@ def confirmar_edicion_admin(request, admin_id):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_administrador(request, admin_id):
     profile = get_object_or_404(Profile, id=admin_id)
     if request.method == 'POST':
@@ -385,7 +385,7 @@ def eliminar_administrador(request, admin_id):
 
 # Vistas de gestión de empleados
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def crear_empleado(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)
@@ -440,7 +440,7 @@ def crear_empleado(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def confirmar_creacion_empleado(request):
     temp_data = request.session.get('empleado_temp_data', {})
     
@@ -495,7 +495,7 @@ def confirmar_creacion_empleado(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_empleados(request):
     """Vista para listar todos los empleados"""
     empleados = Profile.objects.filter(rol='Empleado')
@@ -523,7 +523,7 @@ def listar_empleados(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def editar_empleado(request, empleado_id):
     empleado = get_object_or_404(Profile, id=empleado_id, rol='Empleado')
     
@@ -562,7 +562,7 @@ def editar_empleado(request, empleado_id):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_empleado(request, empleado_id):
     profile = get_object_or_404(Profile, id=empleado_id)
     if request.method == 'POST':
@@ -572,7 +572,7 @@ def eliminar_empleado(request, empleado_id):
     return render(request, 'usuarios/Empleado/eliminar_empleado.html', {'empleado': profile})
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def confirmar_edicion_empleado(request, empleado_id):
     empleado = get_object_or_404(Profile, id=empleado_id)
     new_data = request.session.get('empleado_edit_data', {})

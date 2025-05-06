@@ -33,9 +33,9 @@ def notificaciones(request):
     }
 
 
-# Protected views - Employee level access
+# Protected views - Admin level access
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_productos(request):
     productos = Producto.objects.all()
 
@@ -87,7 +87,7 @@ def listar_productos(request):
 
 # Protected views - Admin level access
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def registrar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
@@ -111,7 +111,7 @@ def registrar_producto(request):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def modificar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
@@ -133,7 +133,7 @@ def modificar_producto(request, producto_id):
 
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     frase_desafio = f'Eliminar "{producto.nombre}"'

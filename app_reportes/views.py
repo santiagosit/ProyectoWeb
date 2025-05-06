@@ -98,6 +98,8 @@ def estadisticas_ventas(request):
         'estadisticas': estadisticas
     })
 
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def productos_mas_vendidos(tipo_tiempo='mensual'):
     """Retorna los productos más vendidos en un periodo."""
     hoy = timezone.now().date()
@@ -117,6 +119,8 @@ def productos_sin_stock():
     """Retorna productos sin stock."""
     return Producto.objects.filter(cantidad_stock=0)
 
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def productos_no_vendidos():
     """Retorna productos sin ventas en los últimos 30 días."""
     hace_30_dias = timezone.now().date() - timezone.timedelta(days=30)
@@ -534,6 +538,8 @@ def exportar_reporte_pdf(request):
     
     return response
 
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def home(request):
     context = {
         'productos_bajo_stock_count': Producto.objects.filter(

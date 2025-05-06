@@ -14,7 +14,7 @@ from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 
 # Vistas de ingresos
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_ingresos(request):
     """Vista para listar todos los ingresos"""
     # Obtener todos los ingresos (ventas y personalizados)
@@ -37,7 +37,7 @@ def listar_ingresos(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def detalle_ingreso(request, ingreso_id):
     ingreso = get_object_or_404(Ingreso, id=ingreso_id)
 
@@ -59,7 +59,7 @@ def detalle_ingreso(request, ingreso_id):
     return render(request, 'finanzas/detalle_ingreso.html', context)
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_ingreso(request, ingreso_id):
     """Vista para eliminar un ingreso"""
     ingreso = get_object_or_404(Ingreso, id=ingreso_id)
@@ -70,7 +70,7 @@ def eliminar_ingreso(request, ingreso_id):
     return render(request, 'finanzas/eliminar_ingreso.html', {'ingreso': ingreso})
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def crear_ingreso_personalizado(request):
     """Vista para crear un ingreso personalizado"""
     if request.method == 'POST':
@@ -100,7 +100,7 @@ def crear_ingreso_personalizado(request):
 
 # Vistas de egresos
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_egresos(request):
     """Vista para listar todos los egresos"""
     egresos_pedidos = Egreso.objects.filter(tipo='pedido').select_related('pedido').order_by('-fecha')
@@ -112,7 +112,7 @@ def listar_egresos(request):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def detalle_egreso(request, egreso_id):
     """Vista para ver el detalle de un egreso específico"""
     egreso = get_object_or_404(Egreso, id=egreso_id)
@@ -134,7 +134,7 @@ def detalle_egreso(request, egreso_id):
     return render(request, 'finanzas/detalle_egreso.html', context)
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def crear_egreso_personalizado(request):
     """Vista para crear un nuevo egreso personalizado"""
     if request.method == 'POST':
@@ -150,7 +150,7 @@ def crear_egreso_personalizado(request):
     return render(request, 'finanzas/crear_egreso_personalizado.html', {'form': form})
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_egreso(request, egreso_id):
     """Vista para eliminar un egreso"""
     egreso = get_object_or_404(Egreso, id=egreso_id)

@@ -109,7 +109,7 @@ def procesar_venta(request, venta_form):
 
 # View functions
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def registrar_venta(request):
     try:
         if not request.user.profile:
@@ -211,7 +211,7 @@ def registrar_venta(request):
         return redirect('home')
 
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def confirmar_venta(request):
     productos_venta = request.session.get('productos_venta', [])
     total = request.session.get('venta_total', '0')
@@ -255,7 +255,7 @@ def confirmar_venta(request):
     })
 
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def detalle_venta(request, venta_id):
     try:
         # Verificar si el usuario es empleado y es su venta
@@ -397,7 +397,7 @@ def editar_venta(request, venta_id):
     })
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def eliminar_venta(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
     if request.method == 'POST':
@@ -412,7 +412,7 @@ def eliminar_venta(request, venta_id):
     return render(request, 'ventas/venta_confirm_delete.html', {'venta': venta})
 
 @login_required
-@user_passes_test(is_employee_or_above)
+@user_passes_test(is_employee_or_above, login_url='empleado_dashboard')
 def mis_ventas(request):
     today = timezone.now().date()
     
