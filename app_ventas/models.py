@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Sum, F
 from decimal import Decimal
+from django.utils import timezone
 from app_inventario.models import Producto
 from app_usuarios.models import Profile
 
@@ -25,7 +26,7 @@ class Venta(models.Model):
         null=True,
         blank=True
     )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(default=timezone.now)
     fecha_modificacion = models.DateTimeField(auto_now=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)

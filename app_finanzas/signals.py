@@ -11,7 +11,8 @@ def crear_ingreso_por_venta(sender, instance, created, **kwargs):
         Ingreso.objects.create(
             venta=instance,
             monto=instance.total,
-            descripcion=f'Ingreso por Venta ID {instance.id}'
+            descripcion=f'Ingreso por Venta ID {instance.id}',
+            fecha=instance.fecha_creacion
         )
 
 @receiver(post_save, sender=Pedido)

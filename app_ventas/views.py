@@ -6,6 +6,7 @@ from django.db import transaction
 from decimal import Decimal
 from django.utils import timezone
 from django.db.models import Sum
+from django.utils.dateparse import parse_datetime
 
 # Local imports
 from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
@@ -156,24 +157,26 @@ def registrar_venta(request):
                 try:
                     with transaction.atomic():
                         total = Decimal(request.session.get('venta_total', '0'))
-                        
+                        # Obtener fecha personalizada si fue enviada
+                        fecha_str = request.POST.get('fecha')
+                        fecha_venta = None
+                        if fecha_str:
+                            fecha_venta = parse_datetime(fecha_str)
                         # Crear la venta
                         venta = Venta.objects.create(
                             empleado=request.user.profile,
                             estado='pendiente',
-                            total=total
+                            total=total,
+                            fecha_creacion=fecha_venta if fecha_venta else timezone.now()
                         )
-
                         # Crear los detalles (el modelo se encargará del stock)
                         for item in productos_venta:
                             producto = Producto.objects.get(id=item['producto_id'])
                             cantidad = int(item['cantidad'])
                             precio_unitario = Decimal(item['precio_unitario'])
-                            
                             # Verificar stock antes de crear el detalle
                             if producto.cantidad_stock < cantidad:
                                 raise ValueError(f'Stock insuficiente para {producto.nombre}')
-                            
                             VentaDetalle.objects.create(
                                 venta=venta,
                                 producto=producto,
@@ -181,28 +184,24 @@ def registrar_venta(request):
                                 precio_unitario=precio_unitario,
                                 precio_total=Decimal(item['subtotal'])
                             )
-
                         # Completar venta
                         venta.completar_venta()
-
                         # Limpiar sesión
                         request.session['productos_venta'] = []
                         request.session['venta_total'] = '0'
                         request.session.modified = True
-                        
                         messages.success(request, 'Venta registrada exitosamente')
                         if request.user.profile.rol == 'Empleado':
                             return redirect('detalle_venta', venta_id=venta.id)
                         return redirect('listar_ventas')
-
                 except Exception as e:
                     messages.error(request, f'Error al procesar la venta: {str(e)}')
                     return redirect('registrar_venta')
-
         context = {
             'productos': productos,
             'productos_venta': productos_venta,
-            'total': Decimal(request.session.get('venta_total', '0'))
+            'total': Decimal(request.session.get('venta_total', '0')),
+            'form': VentaForm()
         }
         return render(request, 'ventas/registrar_venta.html', context)
 

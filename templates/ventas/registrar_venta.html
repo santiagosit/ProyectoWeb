@@ -103,6 +103,10 @@
     <div class="actions mt-4">
         <form method="post" class="form-confirmar">
             {% csrf_token %}
+            <div class="form-group">
+                <label for="fecha">Fecha personalizada:</label>
+                <input type="datetime-local" name="fecha" id="fecha" class="form-control" value="{{ form.fecha.value|default_if_none:'' }}">
+            </div>
             <button type="submit" name="confirmar_venta" 
                     class="btn btn-success" 
                     {% if not productos_venta %}disabled{% endif %}>
