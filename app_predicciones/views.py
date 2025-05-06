@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from datetime import timedelta, datetime, date
 from django.db.models import Sum, Avg, Count, F, Q
@@ -12,8 +12,10 @@ from collections import defaultdict
 import calendar
 import numpy as np
 from sklearn.linear_model import LinearRegression  # Para regresión lineal
+from app_usuarios.utils import is_admin_or_superuser
 
 @login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def oportunidad_compra_prediccion(request):
     hoy = timezone.now()
     hace_3_anios = hoy - timedelta(days=365*3)
@@ -109,6 +111,7 @@ def oportunidad_compra_prediccion(request):
     return render(request, 'predicciones/oportunidad_compra.html', context)
 
 @login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def dashboard_predicciones(request):
     # Configuración de fechas
     hoy = timezone.now()
@@ -346,105 +349,105 @@ def dashboard_predicciones(request):
     oportunidades_pedido.sort(key=lambda x: (orden_urgencia[x['urgencia']], -x['cantidad_sugerida']))
     
     # --- SUGERENCIAS PARA TABLAS (mejorada) ---
-    predicciones_entre_semana = []
-    predicciones_fin_de_semana = []
-    for producto in productos:
-        ventas = VentaDetalle.objects.filter(
-            producto=producto,
-            venta__estado='completada',
-            venta__fecha_creacion__gte=hoy - timedelta(days=28)  # 4 semanas
-        )
-        ventas_entre_semana = 0
-        ventas_fin_de_semana = 0
-        for v in ventas:
-            dia = v.venta.fecha_creacion.weekday()
-            if dia < 4:  # lunes (0) a jueves (3)
-                ventas_entre_semana += v.cantidad
-            else:  # viernes (4) a domingo (6)
-                ventas_fin_de_semana += v.cantidad
-        promedio_entre_semana = ventas_entre_semana // 4
-        promedio_fin_de_semana = ventas_fin_de_semana // 4
-        sugerido_entre_semana = max(promedio_entre_semana - producto.cantidad_stock, 0)
-        sugerido_fin_de_semana = max(promedio_fin_de_semana - producto.cantidad_stock, 0)
-        if sugerido_entre_semana > 0:
-            predicciones_entre_semana.append({
-                'producto': producto.nombre,
-                'stock_actual': producto.cantidad_stock,
-                'stock_minimo': producto.stock_minimo,
-                'promedio_semanal': promedio_entre_semana,
-                'cantidad_sugerida': sugerido_entre_semana
-            })
-        if sugerido_fin_de_semana > 0:
-            predicciones_fin_de_semana.append({
-                'producto': producto.nombre,
-                'stock_actual': producto.cantidad_stock,
-                'stock_minimo': producto.stock_minimo,
-                'promedio_semanal': promedio_fin_de_semana,
-                'cantidad_sugerida': sugerido_fin_de_semana
-            })
-
-    # Si no hay datos o hay pocos productos, crear datos de prueba para verificar que la gráfica funcione
-    if not tendencia_predicciones or len(tendencia_predicciones) < 2:
-        print("No hay datos reales suficientes, generando datos de prueba para la gráfica...")
+    # Cálculo de predicción y oportunidades de pedido
+    tendencia_predicciones = {}
+    oportunidades_pedido = []
+    
+    for producto_obj in productos:
+        producto_nombre = producto_obj.nombre
+        datos_semanales = [ventas_por_producto[producto_nombre].get(sem, 0) for sem in semanas_labels]
+        datos_mensuales = [ventas_mensuales_por_producto[producto_nombre].get(mes, 0) for mes in meses_labels]
         
-        # Crear datos de prueba completos con la estructura exacta que espera el template
-        semanas_historicas = ["2025-01-01", "2025-01-08", "2025-01-15", "2025-01-22", "2025-01-29", "2025-02-05", "2025-02-12", "2025-02-19"]
-        semanas_prediccion = ["2025-02-26", "2025-03-05", "2025-03-12", "2025-03-19"]
+        # Predicción semanal usando regresión lineal
+        predicciones_semanales = []
+        if len(datos_semanales) > 1:
+            # Regresión lineal para datos semanales
+            x = np.array(range(len(datos_semanales)))
+            y = np.array(datos_semanales)
+            if len(x) > 0 and len(y) > 0:  # Verificar que hay datos
+                # Calcular coeficientes de regresión
+                n = len(x)
+                x_mean = np.mean(x)
+                y_mean = np.mean(y)
+                numerator = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n))
+                denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
+                slope = numerator / denominator if denominator != 0 else 0
+                intercept = y_mean - slope * x_mean
+                
+                # Predecir próximas 4 semanas
+                for i in range(len(datos_semanales), len(datos_semanales) + 4):
+                    prediccion = max(0, round(slope * i + intercept))
+                    predicciones_semanales.append(prediccion)
         
-        # Usar los nombres de productos reales si existen
-        productos_nombres = [p.nombre for p in productos]
-        if len(productos_nombres) < 2:
-            productos_nombres = ["Producto de Prueba 1", "Producto de Prueba 2"]
+        # Si no hay suficientes datos, usar el promedio o un valor por defecto
+        if not predicciones_semanales:
+            promedio = sum(datos_semanales) / len(datos_semanales) if datos_semanales else 0
+            predicciones_semanales = [round(promedio)] * 4
         
-        datos_prueba = {}
+        # Predicción mensual
+        prediccion_mensual = sum(predicciones_semanales)
         
-        # Crear datos para cada producto
-        for i, nombre_producto in enumerate(productos_nombres[:5]):  # Limitar a 5 productos para no sobrecargar
-            # Generar datos aleatorios pero consistentes para cada producto
-            base_historico = [10, 15, 12, 18, 20, 22, 18, 25] if i % 2 == 0 else [5, 8, 10, 7, 9, 12, 15, 14]
-            base_prediccion = [28, 30, 32, 35] if i % 2 == 0 else [16, 18, 20, 22]
+        # Calcular si se necesita hacer un pedido
+        stock_actual = producto_obj.cantidad_stock
+        stock_minimo = producto_obj.stock_minimo
+        demanda_proyectada = prediccion_mensual
+        
+        # Determinar si se necesita hacer un pedido y cuándo
+        necesita_pedido = stock_actual < (demanda_proyectada + stock_minimo)
+        semanas_hasta_pedido = 0
+        
+        if necesita_pedido:
+            # Calcular cuántas semanas aguantará el stock actual
+            stock_restante = stock_actual
+            for i, pred_semanal in enumerate(predicciones_semanales):
+                if stock_restante <= (pred_semanal + stock_minimo):
+                    semanas_hasta_pedido = i
+                    break
+                stock_restante -= pred_semanal
             
-            # Variar un poco los datos para cada producto
-            factor = (i + 1) * 0.5
-            historico = [int(val * factor) for val in base_historico]
-            prediccion = [int(val * factor) for val in base_prediccion]
-            prediccion_mensual = sum(prediccion)
-            
-            datos_prueba[nombre_producto] = {
-                "labels": semanas_historicas + semanas_prediccion,
-                "data": historico + prediccion,  # Histórico + predicción
-                "historico": historico,
-                "prediccion": prediccion,
-                "prediccion_mensual": prediccion_mensual,
-                "meses": ["2025-01", "2025-02", "2025-03", "2025-04"],
-                "datos_mensuales": [sum(historico[:4]), sum(historico[4:]), prediccion_mensual, prediccion_mensual]
-            }
+            # Si el stock aguanta más de 4 semanas
+            if semanas_hasta_pedido == 0 and stock_restante > stock_minimo:
+                semanas_hasta_pedido = 4
         
-        print(f"Datos de prueba generados para {len(datos_prueba)} productos")
-        tendencia_predicciones = datos_prueba
+        # Calcular fecha sugerida de pedido
+        fecha_pedido = None
+        if necesita_pedido:
+            if semanas_hasta_pedido == 0:
+                fecha_pedido = "Inmediato"
+            else:
+                dias_hasta_pedido = semanas_hasta_pedido * 7
+                fecha_pedido = (hoy + timedelta(days=dias_hasta_pedido)).strftime('%Y-%m-%d')
         
-        # Añadir también datos de prueba para oportunidades de pedido
-        if not oportunidades_pedido:
-            oportunidades_pedido = [
-                {
-                    'producto': 'Producto de Prueba 1',
-                    'stock_actual': 15,
-                    'stock_minimo': 10,
-                    'demanda_proyectada': 125,
-                    'cantidad_sugerida': 120,
-                    'fecha_sugerida': '2025-02-15',
-                    'urgencia': 'Media'
-                },
-                {
-                    'producto': 'Producto de Prueba 2',
-                    'stock_actual': 5,
-                    'stock_minimo': 10,
-                    'demanda_proyectada': 76,
-                    'cantidad_sugerida': 81,
-                    'fecha_sugerida': 'Inmediato',
-                    'urgencia': 'Alta'
-                }
-            ]
+        # Cantidad sugerida para el pedido (demanda proyectada + margen de seguridad - stock actual)
+        margen_seguridad = max(stock_minimo, round(demanda_proyectada * 0.2))  # 20% de margen o stock mínimo
+        cantidad_sugerida = max(0, demanda_proyectada + margen_seguridad - stock_actual)
+        
+        # Añadir a las oportunidades de pedido si se necesita pedir
+        if necesita_pedido and cantidad_sugerida > 0:
+            oportunidades_pedido.append({
+                'producto': producto_nombre,
+                'stock_actual': stock_actual,
+                'stock_minimo': stock_minimo,
+                'demanda_proyectada': demanda_proyectada,
+                'cantidad_sugerida': cantidad_sugerida,
+                'fecha_sugerida': fecha_pedido,
+                'urgencia': 'Alta' if semanas_hasta_pedido == 0 else ('Media' if semanas_hasta_pedido <= 2 else 'Baja')
+            })
+        
+        # Guardar datos para la gráfica
+        tendencia_predicciones[producto_nombre] = {
+            'labels': semanas_labels + proximas_semanas,
+            'data': datos_semanales + predicciones_semanales,
+            'prediccion_mensual': prediccion_mensual,
+            'historico': datos_semanales,
+            'prediccion': predicciones_semanales,
+            'meses': meses_labels + proximos_meses,
+            'datos_mensuales': datos_mensuales + [prediccion_mensual, prediccion_mensual],
+        }
+    
+    # Ordenar oportunidades de pedido por urgencia
+    orden_urgencia = {'Alta': 0, 'Media': 1, 'Baja': 2}
+    oportunidades_pedido.sort(key=lambda x: (orden_urgencia[x['urgencia']], -x['cantidad_sugerida']))
     
     # --- DEPURACIÓN Y FORZAR PRODUCTOS EN EL JSON ---
     print("\n--- DEPURACIÓN DASHBOARD PREDICCIONES ---")
@@ -476,8 +479,6 @@ def dashboard_predicciones(request):
     
     sin_productos_reales = (Producto.objects.count() == 0)
     context = {
-        'predicciones_entre_semana': predicciones_entre_semana,
-        'predicciones_fin_de_semana': predicciones_fin_de_semana,
         'tendencia_predicciones_json': tendencia_predicciones_json,
         'oportunidades_pedido': oportunidades_pedido,
         'fecha_analisis': hoy.strftime('%Y-%m-%d'),

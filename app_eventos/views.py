@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from datetime import timedelta
 
-from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
+from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 from .models import Evento, Cliente
 
 def get_eventos_proximos():
@@ -19,6 +19,7 @@ def get_eventos_proximos():
 
 
 @login_required
+@user_passes_test(is_employee_or_above)
 def listar_eventos(request):
     eventos = Evento.objects.all().order_by('-fecha_evento')
     

@@ -36,9 +36,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure--^!j0zutxz=)2th+qql@8&4%ko%)8p9ddcc^zia(u0-me$b%_1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['djangoelectronics.store','127.0.0.1','localhost']
+# --- Error handlers ---
+# Asegúrate de tener DEBUG = False en producción
+DEBUG = True 
+ALLOWED_HOSTS = ['*']
 
 CRSF_TRUSTED_ORIGINS = ['https://djangoelectronics.store/', 'https://127.0.0.1:8000', 'localhost']
 
@@ -144,7 +145,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),

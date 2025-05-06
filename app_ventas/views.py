@@ -287,6 +287,7 @@ def detalle_venta(request, venta_id):
         return redirect('listar_ventas')
 
 @login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def listar_ventas(request):
     ventas = Venta.objects.all().order_by('-fecha_creacion')
 
@@ -318,7 +319,7 @@ def listar_ventas(request):
     return render(request, 'ventas/listar_ventas.html', context)
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def editar_venta(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
     detalles = venta.detalles.all()
@@ -411,6 +412,7 @@ def eliminar_venta(request, venta_id):
     return render(request, 'ventas/venta_confirm_delete.html', {'venta': venta})
 
 @login_required
+@user_passes_test(is_employee_or_above)
 def mis_ventas(request):
     today = timezone.now().date()
     

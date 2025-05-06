@@ -14,3 +14,4 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ProyectoWeb.settings')
 
 application = get_asgi_application()
+#copiar todo lo de static files a staticfiles(solo actualizar)

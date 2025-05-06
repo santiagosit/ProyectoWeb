@@ -8,7 +8,7 @@ from django.db.models.deletion import ProtectedError
 # Local imports
 from .models import Producto
 from .forms import ProductoForm
-from app_usuarios.utils import is_employee_or_above, is_admin_or_superuser
+from app_usuarios.utils import is_admin_or_superuser, is_employee_or_above
 
 # Helper functions
 def get_productos_bajo_stock():

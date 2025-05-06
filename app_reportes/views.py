@@ -45,6 +45,7 @@ def estilizar_encabezado(celda):
     )
 
 @login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def estadisticas_ventas(request):
     fecha_actual = timezone.now().date()
     productos = Producto.objects.all()
@@ -127,7 +128,7 @@ def productos_no_vendidos():
 
 # View functions
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def reporte_inventario(request):
     context = {
         'productos_mas_vendidos': VentaDetalle.objects.values(
@@ -146,7 +147,7 @@ def reporte_inventario(request):
     return render(request, 'reportes/reporte_inventario.html', context)
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def reporte_ingresos_egresos(request):
     tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
     hoy = timezone.now()
@@ -220,7 +221,7 @@ def reporte_ingresos_egresos(request):
     return render(request, 'reportes/reporte_ingresos_egresos.html', context)
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def exportar_reporte_excel(request):
     hoy = timezone.now().date()
 
@@ -323,7 +324,7 @@ def exportar_reporte_excel(request):
     return response
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def exportar_reporte_financiero(request):
     tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
     
@@ -383,7 +384,7 @@ def exportar_reporte_financiero(request):
     return response
 
 @login_required
-@user_passes_test(is_admin_or_superuser)
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def exportar_reporte_pdf(request):
     # Crear el objeto de respuesta HTTP
     response = HttpResponse(content_type='application/pdf')
@@ -544,4 +545,3 @@ def home(request):
         ).count(),
     }
     return render(request, 'home.html', context)
-

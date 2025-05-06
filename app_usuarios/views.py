@@ -82,12 +82,18 @@ def logout_view(request):
     return redirect('login')
 
 @login_required
+@user_passes_test(is_admin_or_superuser, login_url='empleado_dashboard')
 def home(request):
     print("Home view accessed")  # Debug log
     """Dashboard principal para administradores"""
     # Verificar que sea administrador o superusuario
     if not hasattr(request.user, 'profile') or (request.user.profile.rol != 'Administrador' and not request.user.is_superuser):
-        return redirect('empleado_dashboard')
+        # Si es empleado, redirigir a su dashboard
+        if hasattr(request.user, 'profile') and request.user.profile.rol == 'Empleado':
+            return redirect('empleado_dashboard')
+        # Si no tiene perfil válido, cerrar sesión y redirigir a login
+        logout(request)
+        return redirect('login')
     
 
     #Tarjeta, envia información del total de ventas del dia
@@ -157,7 +163,10 @@ def home(request):
     }   
     return render(request, 'home.html', context)
 
-@login_required
+@employee_required
+# Elimina los decoradores antiguos para evitar doble chequeo
+#@login_required
+#@user_passes_test(is_employee_or_above)
 def empleado_dashboard(request):
     """Dashboard para empleados"""
     # Verificar que sea empleado
@@ -722,6 +731,18 @@ def reset_password(request, email):
                 return HttpResponse("User not found")
 
     return render(request, 'usuarios/reset_password.html', {'email': email})
+
+# --- Vista personalizada para 404 ---
+from django.shortcuts import render
+
+def custom_404_view(request, exception):
+    """Muestra una página 404 personalizada sin header/base si el usuario no está autenticado"""
+    if not request.user.is_authenticated:
+        # Muestra el 404 minimalista para usuarios no logueados
+        return render(request, 'usuarios/404.html', status=404)
+    else:
+        # Si está logueado, puedes mostrar otra plantilla o el mismo 404 pero extendiendo de base normal si lo deseas
+        return render(request, 'usuarios/404.html', status=404)
 
 # Funciones de utilidad
 def generar_pin():
