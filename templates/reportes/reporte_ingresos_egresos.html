@@ -9,8 +9,9 @@
         <div class="report-actions">
             <form method="GET" class="form-periodo">
                 <select name="tipo_tiempo" id="tipo_tiempo" onchange="this.form.submit()" class="form-control">
+                    <option value="diario" {% if tipo_tiempo == 'diario' %}selected{% endif %}>Diario</option>
                     <option value="mensual" {% if tipo_tiempo == 'mensual' %}selected{% endif %}>Mensual</option>
-                    <option value="semanal" {% if tipo_tiempo == 'semanal' %}selected{% endif %}>Semanal</option>
+                    <option value="anual" {% if tipo_tiempo == 'anual' %}selected{% endif %}>Anual</option>
                 </select>
             </form>
             <div class="btn-group">
@@ -46,8 +47,13 @@
         </div>
         
         <div class="chart-wrapper">
-            <h3>Distribución de Egresos por Categoría</h3>
+            <h3>Distribución Ingresos vs Egresos</h3>
             <canvas id="pieChart"></canvas>
+        </div>
+        
+        <div class="chart-wrapper">
+            <h3>Distribución de Egresos por Categoría</h3>
+            <canvas id="categoryChart"></canvas>
         </div>
     </div>
 </div>
@@ -98,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     );
 
-    // Configurar gráfico de torta
+    // Configurar gráfico de torta para Ingresos vs Egresos
     const pieChart = new Chart(
         document.getElementById('pieChart'),
         {
@@ -107,6 +113,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: chartData.pie_chart.labels,
                 datasets: [{
                     data: chartData.pie_chart.data,
+                    backgroundColor: [
+                        '#28a745',  // Verde para ingresos
+                        '#dc3545',  // Rojo para egresos
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Ingresos vs Egresos'
+                    }
+                }
+            }
+        }
+    );
+    
+    // Configurar gráfico de categorías de egresos
+    const categoryChart = new Chart(
+        document.getElementById('categoryChart'),
+        {
+            type: 'pie',
+            data: {
+                labels: chartData.categoria_chart.labels,
+                datasets: [{
+                    data: chartData.categoria_chart.data,
                     backgroundColor: [
                         '#FF6384',
                         '#36A2EB',
@@ -124,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     title: {
                         display: true,
-                        text: 'Distribución de Egresos'
+                        text: 'Categorías de Egresos'
                     }
                 }
             }

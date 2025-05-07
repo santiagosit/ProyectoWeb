@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, F, Q, Count
 from django.utils import timezone
-from django.db.models.functions import TruncMonth, TruncWeek
+from django.db.models.functions import TruncWeek
 from django.template.defaultfilters import floatformat
 
 # Third-party imports
@@ -156,43 +156,123 @@ def reporte_ingresos_egresos(request):
     tipo_tiempo = request.GET.get('tipo_tiempo', 'mensual')
     hoy = timezone.now()
     
-    if tipo_tiempo == 'semanal':
-        # Última semana
+    if tipo_tiempo == 'diario':
+        # Últimos 7 días
         inicio_periodo = hoy - timedelta(days=7)
-    else:
+        agrupar_por = 'fecha__date'
+        formato_fecha = '%d/%m/%Y'
+        delta = timedelta(days=1)
+    elif tipo_tiempo == 'mensual':
+        # Últimos 6 meses
+        inicio_periodo = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1)
+        inicio_periodo = inicio_periodo - timedelta(days=31*5)  # aproximadamente 5 meses atrás
+        agrupar_por = 'fecha__month'
+        formato_fecha = '%B %Y'
+        delta = None
+    elif tipo_tiempo == 'anual':
+        # Últimos 5 años
+        inicio_periodo = hoy.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        inicio_periodo = inicio_periodo.replace(year=inicio_periodo.year-4)
+        agrupar_por = 'fecha__year'
+        formato_fecha = '%Y'
+        delta = None
+    else:  # Default to monthly
         # Mes actual
         inicio_periodo = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        agrupar_por = 'fecha__date'
+        formato_fecha = '%d/%m/%Y'
+        delta = timedelta(days=1)
 
-    # Obtener ingresos
-    ingresos_por_periodo = Ingreso.objects.filter(
-        fecha__gte=inicio_periodo,
-        fecha__lte=hoy
-    ).values('fecha__date').annotate(
-        total=Sum('monto')
-    ).order_by('fecha__date')
+    # Preparar listas para datos y etiquetas
+    if tipo_tiempo == 'diario':
+        # Obtener ingresos diarios
+        ingresos_por_periodo = Ingreso.objects.filter(
+            fecha__gte=inicio_periodo,
+            fecha__lte=hoy
+        ).values('fecha__date').annotate(
+            total=Sum('monto')
+        ).order_by('fecha__date')
 
-    # Obtener egresos
-    egresos_por_periodo = Egreso.objects.filter(
-        fecha__gte=inicio_periodo,
-        fecha__lte=hoy
-    ).values('fecha__date').annotate(
-        total=Sum('monto')
-    ).order_by('fecha__date')
+        # Obtener egresos diarios
+        egresos_por_periodo = Egreso.objects.filter(
+            fecha__gte=inicio_periodo,
+            fecha__lte=hoy
+        ).values('fecha__date').annotate(
+            total=Sum('monto')
+        ).order_by('fecha__date')
+        
+        # Crear diccionarios para datos
+        ingresos_dict = {x['fecha__date']: float(x['total']) if x['total'] else 0 for x in ingresos_por_periodo}
+        egresos_dict = {x['fecha__date']: float(x['total']) if x['total'] else 0 for x in egresos_por_periodo}
 
-    # Crear diccionarios para datos
-    ingresos_dict = {x['fecha__date']: float(x['total']) if x['total'] else 0 for x in ingresos_por_periodo}
-    egresos_dict = {x['fecha__date']: float(x['total']) if x['total'] else 0 for x in egresos_por_periodo}
+        # Generar lista de fechas
+        fechas = []
+        fecha_actual = inicio_periodo.date()
+        while fecha_actual <= hoy.date():
+            fechas.append(fecha_actual)
+            fecha_actual += timedelta(days=1)
 
-    # Generar lista de fechas
-    fechas = []
-    fecha_actual = inicio_periodo.date()
-    while fecha_actual <= hoy.date():
-        fechas.append(fecha_actual)
-        fecha_actual += timedelta(days=1)
-
-    # Preparar listas de datos
-    ingresos_lista = [ingresos_dict.get(fecha, 0) for fecha in fechas]
-    egresos_lista = [egresos_dict.get(fecha, 0) for fecha in fechas]
+    # Preparar listas de datos para días
+    if tipo_tiempo == 'diario':
+        ingresos_lista = [ingresos_dict.get(fecha, 0) for fecha in fechas]
+        egresos_lista = [egresos_dict.get(fecha, 0) for fecha in fechas]
+        labels = [fecha.strftime('%d/%m/%Y') for fecha in fechas]
+    elif tipo_tiempo == 'mensual':
+        # Para reportes mensuales - últimos 6 meses
+        meses = []
+        meses_numeros = []
+        
+        # Generar los últimos 6 meses
+        for i in range(6):
+            fecha_mes = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1) - timedelta(days=30*i)
+            meses.append(fecha_mes)
+            meses_numeros.append((fecha_mes.year, fecha_mes.month))
+            
+        # Ordenar meses cronológicamente
+        meses.sort()
+        meses_numeros.sort()
+        
+        # Crear etiquetas para el gráfico
+        labels = [mes.strftime('%B %Y') for mes in meses]
+        
+        # Preparar listas para datos
+        ingresos_lista = [0] * len(meses)
+        egresos_lista = [0] * len(meses)
+        
+        # Obtener datos mensuales agrupados manualmente
+        for ingreso in Ingreso.objects.filter(fecha__gte=inicio_periodo, fecha__lte=hoy):
+            year_month = (ingreso.fecha.year, ingreso.fecha.month)
+            if year_month in meses_numeros:
+                idx = meses_numeros.index(year_month)
+                ingresos_lista[idx] += float(ingreso.monto)
+                
+        for egreso in Egreso.objects.filter(fecha__gte=inicio_periodo, fecha__lte=hoy):
+            year_month = (egreso.fecha.year, egreso.fecha.month)
+            if year_month in meses_numeros:
+                idx = meses_numeros.index(year_month)
+                egresos_lista[idx] += float(egreso.monto)
+        
+    elif tipo_tiempo == 'anual':
+        # Para reportes anuales - últimos 5 años
+        años = list(range(hoy.year-4, hoy.year+1))
+        labels = [str(año) for año in años]
+        
+        # Preparar listas para datos
+        ingresos_lista = [0] * len(años)
+        egresos_lista = [0] * len(años)
+        
+        # Obtener datos anuales agrupados manualmente
+        for ingreso in Ingreso.objects.filter(fecha__gte=inicio_periodo, fecha__lte=hoy):
+            year = ingreso.fecha.year
+            if year in años:
+                idx = años.index(year)
+                ingresos_lista[idx] += float(ingreso.monto)
+                
+        for egreso in Egreso.objects.filter(fecha__gte=inicio_periodo, fecha__lte=hoy):
+            year = egreso.fecha.year
+            if year in años:
+                idx = años.index(year)
+                egresos_lista[idx] += float(egreso.monto)
     
     # Calcular totales
     total_ingresos = sum(ingresos_lista)
@@ -202,7 +282,7 @@ def reporte_ingresos_egresos(request):
     # Preparar datos para los gráficos
     chart_data = {
         'line_chart': {
-            'labels': [fecha.strftime('%d/%m/%Y') for fecha in fechas],
+            'labels': labels,
             'ingresos': ingresos_lista,
             'egresos': egresos_lista
         },
@@ -212,14 +292,34 @@ def reporte_ingresos_egresos(request):
         }
     }
 
+    # Obtener categorías de egresos para la gráfica de pastel
+    categorias_egresos = Egreso.objects.filter(
+        fecha__gte=inicio_periodo,
+        fecha__lte=hoy
+    ).values('categoria').annotate(
+        total=Sum('monto')
+    ).order_by('-total')[:5]  # Top 5 categorías
+    
+    # Añadir datos para gráfica de categorías
+    if categorias_egresos:
+        chart_data['categoria_chart'] = {
+            'labels': [categoria['categoria'] for categoria in categorias_egresos],
+            'data': [float(categoria['total']) for categoria in categorias_egresos]
+        }
+    else:
+        chart_data['categoria_chart'] = {
+            'labels': ['Sin categorías'],
+            'data': [0]
+        }
+        
     context = {
         'tipo_tiempo': tipo_tiempo,
         'total_ingresos': total_ingresos,
         'total_egresos': total_egresos,
         'balance': balance,
         'chart_data': json.dumps(chart_data),
-        'inicio_periodo': inicio_periodo.strftime('%d/%m/%Y'),
-        'fin_periodo': hoy.strftime('%d/%m/%Y')
+        'inicio_periodo': inicio_periodo.strftime(formato_fecha),
+        'fin_periodo': hoy.strftime(formato_fecha)
     }
     
     return render(request, 'reportes/reporte_ingresos_egresos.html', context)
